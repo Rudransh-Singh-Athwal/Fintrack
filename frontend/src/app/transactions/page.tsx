@@ -22,7 +22,7 @@ export default function TransactionsPage() {
 
     const fetchTransactions = async () => {
         try {
-            const response = await axios.get(`${API}/transactions`);
+            const response = await axios.get(`${API}/api/transactions`);
             setTransactions(response.data);
         } catch (err) {
             console.error("Error fetching transactions:", err);
@@ -36,7 +36,7 @@ export default function TransactionsPage() {
             return;
         }
         try {
-            await axios.delete(`${API}/transactions/${id}`);
+            await axios.delete(`${API}/api/transactions/${id}`);
             setTransactions(transactions.filter(tx => tx._id !== id));
         } catch (err) {
             console.error("Error deleting transaction:", err);
