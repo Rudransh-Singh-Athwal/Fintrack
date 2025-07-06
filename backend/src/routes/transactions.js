@@ -79,7 +79,7 @@ router.delete('/:id', async (req, res, next) => {
         }
         res.status(200).json({
             status: 200,
-            message: `Transaction of ${transaction.amount} for ${transaction.description} deleted successfully`
+            message: `${transaction.description} worth INR ${transaction.amount} deleted successfully`
         })
     } catch (err) {
         next({
