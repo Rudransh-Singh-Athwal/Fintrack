@@ -19,9 +19,23 @@
 /frontend/.pnp.*
 /frontend/.DS_Store
 /frontend/next-env.d.ts
+/frontend/package-lock.json
+/frontend/yarn.lock
+/frontend/.yarnrc.yml
 
 # backend (Express/MongoDB)
 /backend/node_modules
+/backend/package-lock.json
+/backend/yarn.lock
+/backend/.pnp
+/backend/.pnp.*
+/backend/.DS_Store
+/backend/dist
+/backend/.env
+/backend/.env.local
+/backend/.env.development
+/backend/.env.test
+/backend/.env.production
 
 # Build output (if any)
 /build
