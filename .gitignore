@@ -1,6 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# Monorepo-level ignores
 /node_modules
 /.pnp
 .pnp.*
@@ -10,32 +10,39 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# frontend (Next.js)
+/frontend/node_modules
+/frontend/.next/
+/frontend/out/
+/frontend/.vercel
+/frontend/.pnp
+/frontend/.pnp.*
+/frontend/.DS_Store
+/frontend/next-env.d.ts
+
+# backend (Express/MongoDB)
+/backend/node_modules
+
+# Build output (if any)
+/build
 /coverage
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# Misc
+.DS_Store
+*.pem
+
+# Environment files
 .env*
+# (you can override by adding .env.example to repo if desired)
 
-# vercel
-.vercel
-
-# typescript
+# Typescript
 *.tsbuildinfo
-next-env.d.ts
+
+# Vercel
+.vercel
