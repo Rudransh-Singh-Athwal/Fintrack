@@ -22,6 +22,11 @@
 /frontend/package-lock.json
 /frontend/yarn.lock
 /frontend/.yarnrc.yml
+/frontend/.env
+/frontend/.env.local
+/frontend/.env.development
+/frontend/.env.test
+/frontend/.env.production
 
 # backend (Express/MongoDB)
 /backend/node_modules
