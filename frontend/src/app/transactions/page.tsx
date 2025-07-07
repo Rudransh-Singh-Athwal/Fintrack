@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import Navbar from "@/src/components/navbar/navbar";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -15,13 +13,46 @@ export default function TransactionsPage() {
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
 
-    const [transactions, setTransactions] = useState<{ _id: string; date: string; description: string; category: string; amount: number; }[]>([]);
+    const [transactions, setTransactions] = useState<
+        {
+            _id: string;
+            date: string;
+            description: string;
+            category: string;
+            amount: number;
+        }[]
+    >([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         fetchTransactions();
     }, []);
+
+    const handleAddTransaction = async () => {
+        if (!form.date || !form.description || form.amount === 0) {
+            setIsAdding(false);
+            setIsSaving(false);
+            alert("Please fill in all fields correctly.");
+            return;
+        }
+
+        try {
+            const newTransaction = {
+                ...form,
+                date: new Date(form.date).toISOString(),
+            };
+            const response = await axios.post(`${API}/api/transactions`, newTransaction);
+            setTransactions([...transactions, response.data]);
+        } catch (err) {
+            console.error("Error adding transaction:", err);
+        } finally {
+            setForm(initialForm);
+            setIsAdding(false);
+            setIsSaving(false);
+        }
+    }
 
     const fetchTransactions = async () => {
         try {
@@ -32,7 +63,7 @@ export default function TransactionsPage() {
         } finally {
             setIsLoading(false);
         }
-    }
+    };
 
     const handleEditTransaction = async (id: string) => {
         if (!editId) return;
@@ -42,25 +73,31 @@ export default function TransactionsPage() {
                 ...form,
                 date: new Date(form.date).toISOString(),
             };
-            // Run validation here if needed
-            if (!updatedTransaction.date || !updatedTransaction.description || updatedTransaction.amount === 0) {
+
+            if (
+                !updatedTransaction.date ||
+                !updatedTransaction.description ||
+                updatedTransaction.amount === 0
+            ) {
                 setIsSaving(false);
                 alert("Please fill in all fields correctly.");
                 return;
             }
             await axios.put(`${API}/api/transactions/${id}`, updatedTransaction);
-            setTransactions(transactions.map(tx => tx._id === id ? { ...tx, ...updatedTransaction } : tx));
+            setTransactions(
+                transactions.map((tx) =>
+                    tx._id === id ? { ...tx, ...updatedTransaction } : tx
+                )
+            );
         } catch (err) {
             console.error("Error updating transaction:", err);
-        }
-        finally {
+        } finally {
             setIsEditing(false);
             setEditId(null);
             setForm(initialForm);
             setIsSaving(false);
-            // fetchTransactions(); // Refresh the transaction list after editing
         }
-    }
+    };
 
     const handleDeleteTransaction = async (id: string) => {
         if (!window.confirm(`Are you sure you want to delete this transaction?`)) {
@@ -70,45 +107,60 @@ export default function TransactionsPage() {
         }
         try {
             await axios.delete(`${API}/api/transactions/${id}`);
-            setTransactions(transactions.filter(tx => tx._id !== id));
+            setTransactions(transactions.filter((tx) => tx._id !== id));
         } catch (err) {
             console.error("Error deleting transaction:", err);
         } finally {
             setIsDeleting(false);
             setDeleteId(null);
         }
-    }
+    };
 
     return (
         <div className="text-3xl text-center bg-white w-full h-screen">
             <Navbar />
             <div className="flex flex-col items-center mt-10">
                 <div className="w-[60%] flex flex-col items-center">
-                    <h1 className="w-full text-4xl font-bold text-gray-800 mb-6 py-3 text-start">
-                        Transactions
-                    </h1>
+                    <div className="flex justify-around text-nowrap w-full">
+                        <h1 className="w-full text-4xl font-bold text-gray-800 mb-6 py-3 text-start">
+                            Transactions
+                        </h1>
+
+                        <button className="bg-[#cec6c6] text-black text-lg p-3 h-[60%] rounded-4xl self-center"
+                            onClick={() => {
+                                setIsAdding(true);
+                                handleAddTransaction();
+                            }
+                            } disabled={isAdding}
+                        >{isAdding ? "Adding..." : "Add transaction"}</button>
+
+                    </div>
 
                     <table className="text-left shadow-lg rounded-2xl rounded-tl-2xl rounded-tr-2xl overflow-hidden">
                         <thead>
-                            <tr className='text-lg bg-gray-200'>
-                                <th className='text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-2/12'>
+                            <tr className="text-lg bg-gray-200">
+                                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-2/12">
                                     Date
                                 </th>
-                                <th className='text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl max-w-[200px]'>
+                                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl max-w-[200px]">
                                     Description
                                 </th>
-                                <th className='text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12'>
+                                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
                                     Amount
                                 </th>
-                                <th className='text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12'>
+                                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
+
                         {isLoading ? (
                             <tbody>
                                 <tr>
-                                    <td colSpan={5} className="p-4 text-2xl text-center text-gray-500">
+                                    <td
+                                        colSpan={5}
+                                        className="p-4 text-2xl text-center text-gray-500"
+                                    >
                                         Loading transactions...
                                     </td>
                                 </tr>
@@ -127,7 +179,9 @@ export default function TransactionsPage() {
                                                         <input
                                                             type="date"
                                                             value={form.date}
-                                                            onChange={(e) => setForm({ ...form, date: e.target.value })}
+                                                            onChange={(e) =>
+                                                                setForm({ ...form, date: e.target.value })
+                                                            }
                                                             className="border rounded p-1 w-full"
                                                         />
                                                     </td>
@@ -135,7 +189,12 @@ export default function TransactionsPage() {
                                                         <input
                                                             type="text"
                                                             value={form.description}
-                                                            onChange={(e) => setForm({ ...form, description: e.target.value })}
+                                                            onChange={(e) =>
+                                                                setForm({
+                                                                    ...form,
+                                                                    description: e.target.value,
+                                                                })
+                                                            }
                                                             className="border rounded p-1 w-full"
                                                         />
                                                     </td>
@@ -143,14 +202,30 @@ export default function TransactionsPage() {
                                                         <input
                                                             type="number"
                                                             value={form.amount}
-                                                            onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) })}
+                                                            onChange={(e) =>
+                                                                setForm({
+                                                                    ...form,
+                                                                    amount: parseFloat(e.target.value),
+                                                                })
+                                                            }
                                                             className="border rounded p-1 w-full"
                                                         />
                                                     </td>
                                                     <td className="p-2 text-center">
                                                         <button
-                                                            disabled={!form.date || !form.description || form.amount === 0 || isSaving}
-                                                            className={`bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 ${!form.date || !form.description || form.amount === 0 || isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
+                                                            disabled={
+                                                                !form.date ||
+                                                                !form.description ||
+                                                                form.amount === 0 ||
+                                                                isSaving
+                                                            }
+                                                            className={`bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 ${!form.date ||
+                                                                !form.description ||
+                                                                form.amount === 0 ||
+                                                                isSaving
+                                                                ? "opacity-50 cursor-not-allowed"
+                                                                : ""
+                                                                }`}
                                                             onClick={() => {
                                                                 handleEditTransaction(tx._id);
                                                                 setIsSaving(true);
@@ -160,7 +235,8 @@ export default function TransactionsPage() {
                                                         </button>
                                                         <button
                                                             disabled={isSaving}
-                                                            className={`ml-2 bg-gray-300 text-black rounded-lg hover:bg-gray-400 transition-colors duration-200 ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
+                                                            className={`ml-2 bg-gray-300 text-black rounded-lg hover:bg-gray-400 transition-colors duration-200 ${isSaving ? "opacity-50 cursor-not-allowed" : ""
+                                                                }`}
                                                             onClick={() => {
                                                                 setIsEditing(false);
                                                                 setEditId(null);
@@ -178,33 +254,42 @@ export default function TransactionsPage() {
                                                     </td>
                                                     <td className="p-2 text-center">{tx.description}</td>
                                                     <td className="p-2 text-center text-nowrap">
-                                                        {tx.amount < 0 ? "-" : ""}
-                                                        ₹{Math.abs(tx.amount).toFixed(2)}
-                                                    </td><td>
+                                                        {tx.amount < 0 ? "-" : ""}₹
+                                                        {Math.abs(tx.amount).toFixed(2)}
+                                                    </td>
+                                                    <td>
                                                         <div>
                                                             <button
                                                                 disabled={isDeleting}
-                                                                className={`bg-black text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 ${isDeleting && tx._id === deleteId ? "opacity-50 cursor-not-allowed" : ""}`}
+                                                                className={`bg-black text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 ${isDeleting && tx._id === deleteId
+                                                                    ? "opacity-50 cursor-not-allowed"
+                                                                    : ""
+                                                                    }`}
                                                                 onClick={() => {
                                                                     setIsEditing(true);
                                                                     setEditId(tx._id);
                                                                     setForm({
-                                                                        date: new Date(tx.date).toISOString().slice(0, 10),
+                                                                        date: new Date(tx.date)
+                                                                            .toISOString()
+                                                                            .slice(0, 10),
                                                                         description: tx.description,
                                                                         category: tx.category,
-                                                                        amount: tx.amount
+                                                                        amount: tx.amount,
                                                                     });
                                                                 }}
                                                             >
                                                                 Edit
                                                             </button>
                                                             <button
-                                                                className={`ml-2  bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 ${isDeleting && tx._id === deleteId ? "opacity-50 cursor-not-allowed" : ""}`}
+                                                                className={`ml-2  bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 ${isDeleting && tx._id === deleteId
+                                                                    ? "opacity-50 cursor-not-allowed"
+                                                                    : ""
+                                                                    }`}
                                                                 disabled={isDeleting}
                                                                 onClick={() => {
                                                                     setDeleteId(tx._id);
                                                                     setIsDeleting(true);
-                                                                    handleDeleteTransaction(tx._id)
+                                                                    handleDeleteTransaction(tx._id);
                                                                 }}
                                                             >
                                                                 Delete
@@ -213,7 +298,6 @@ export default function TransactionsPage() {
                                                     </td>
                                                 </>
                                             )}
-
                                         </tr>
                                     ))
                                 ) : (
@@ -231,6 +315,6 @@ export default function TransactionsPage() {
                     </table>
                 </div>
             </div>
-        </div >
-    )
+        </div>
+    );
 }
