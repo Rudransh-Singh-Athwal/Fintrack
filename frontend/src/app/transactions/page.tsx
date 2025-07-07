@@ -136,7 +136,7 @@ export default function TransactionsPage() {
             </h1>
 
             <button
-              className="bg-[#cec6c6] text-black text-lg p-3 h-[60%] rounded-4xl self-center"
+              className="bg-[#28a745] hover:cursor-pointer text-white text-lg p-3 h-[60%] rounded-4xl self-center"
               onClick={() => setIsAddingNew(true)}
               disabled={isAddingNew}
             >
@@ -157,7 +157,10 @@ export default function TransactionsPage() {
                   Amount
                 </th>
                 <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
-                  Actions
+                  {/* Actions */}
+                </th>
+                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
+                  {/* Actions */}
                 </th>
               </tr>
             </thead>
@@ -202,7 +205,7 @@ export default function TransactionsPage() {
                   </td>
                   <td className="p-2 text-center">
                     <button
-                      className={`bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
+                      className={`bg-green-500 text-white rounded-lg transition-colors hover:cursor-pointer duration-200 px-3 py-1 disabled:opacity-50 ${
                         isSaving ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                       onClick={() => {
@@ -213,8 +216,11 @@ export default function TransactionsPage() {
                     >
                       {isSaving ? "Saving..." : "Save"}
                     </button>
+                  </td>
+
+                  <td className="p-2 text-center">
                     <button
-                      className={`ml-2 bg-gray-300 text-black rounded-lg hover:bg-gray-400 transition-colors duration-200 px-3 py-1 ${
+                      className={`ml-2 bg-[#888] text-white rounded-lg hover:cursor-pointer transition-colors duration-200 px-3 py-1 ${
                         isSaving ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                       onClick={() => {
@@ -290,7 +296,7 @@ export default function TransactionsPage() {
                               form.amount === 0 ||
                               isSaving
                             }
-                            className={`bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 ${
+                            className={`bg-green-500 text-white hover:cursor-pointer rounded-lg hover:bg-green-600 transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
                               !form.date ||
                               !form.description ||
                               form.amount === 0 ||
@@ -305,9 +311,12 @@ export default function TransactionsPage() {
                           >
                             {isSaving ? "Saving..." : "Save"}
                           </button>
+                        </td>
+
+                        <td className="p-2 text-center">
                           <button
                             disabled={isSaving}
-                            className={`ml-2 bg-gray-300 text-black rounded-lg hover:bg-gray-400 transition-colors duration-200 ${
+                            className={`bg-[#888] text-white rounded-lg transition-colors hover:cursor-pointer duration-200 px-3 py-1 disabled:opacity-50 ${
                               isSaving ? "opacity-50 cursor-not-allowed" : ""
                             }`}
                             onClick={() => {
@@ -330,45 +339,47 @@ export default function TransactionsPage() {
                           {tx.amount < 0 ? "-" : ""}₹
                           {Math.abs(tx.amount).toFixed(2)}
                         </td>
-                        <td>
-                          <div>
-                            <button
-                              disabled={isDeleting}
-                              className={`bg-black text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 ${
-                                isDeleting && tx._id === deleteId
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
-                              onClick={() => {
-                                setIsEditing(true);
-                                setEditId(tx._id);
-                                setForm({
-                                  date: new Date(tx.date)
-                                    .toISOString()
-                                    .slice(0, 10),
-                                  description: tx.description,
-                                  amount: tx.amount,
-                                });
-                              }}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              className={`ml-2  bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 ${
-                                isDeleting && tx._id === deleteId
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
-                              disabled={isDeleting}
-                              onClick={() => {
-                                setDeleteId(tx._id);
-                                setIsDeleting(true);
-                                handleDeleteTransaction(tx._id);
-                              }}
-                            >
-                              Delete
-                            </button>
-                          </div>
+
+                        <td className="p-2 text-center">
+                          <button
+                            disabled={isDeleting}
+                            className={`bg-[#007bff] text-white rounded-lg hover:cursor-pointer transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
+                              isDeleting && tx._id === deleteId
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              setIsEditing(true);
+                              setEditId(tx._id);
+                              setForm({
+                                date: new Date(tx.date)
+                                  .toISOString()
+                                  .slice(0, 10),
+                                description: tx.description,
+                                amount: tx.amount,
+                              });
+                            }}
+                          >
+                            Edit
+                          </button>
+                        </td>
+
+                        <td className="p-2 text-center">
+                          <button
+                            className={`bg-[#dc3545] text-white rounded-lg hover:bg-red-600 hover:cursor-pointer transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
+                              isDeleting && tx._id === deleteId
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                            }`}
+                            disabled={isDeleting}
+                            onClick={() => {
+                              setDeleteId(tx._id);
+                              setIsDeleting(true);
+                              handleDeleteTransaction(tx._id);
+                            }}
+                          >
+                            Delete
+                          </button>
                         </td>
                       </>
                     )}
