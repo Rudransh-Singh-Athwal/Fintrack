@@ -44,6 +44,7 @@ export default function TransactionsPage() {
             };
             // Run validation here if needed
             if (!updatedTransaction.date || !updatedTransaction.description || updatedTransaction.amount === 0) {
+                setIsSaving(false);
                 alert("Please fill in all fields correctly.");
                 return;
             }
@@ -63,6 +64,8 @@ export default function TransactionsPage() {
 
     const handleDeleteTransaction = async (id: string) => {
         if (!window.confirm(`Are you sure you want to delete this transaction?`)) {
+            setIsDeleting(false);
+            setDeleteId(null);
             return;
         }
         try {
@@ -146,7 +149,8 @@ export default function TransactionsPage() {
                                                     </td>
                                                     <td className="p-2 text-center">
                                                         <button
-                                                            className={`bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 ${!form.date || !form.description || form.amount === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                                                            disabled={!form.date || !form.description || form.amount === 0 || isSaving}
+                                                            className={`bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 ${!form.date || !form.description || form.amount === 0 || isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
                                                             onClick={() => {
                                                                 handleEditTransaction(tx._id);
                                                                 setIsSaving(true);
@@ -155,7 +159,8 @@ export default function TransactionsPage() {
                                                             {isSaving ? "Saving..." : "Save"}
                                                         </button>
                                                         <button
-                                                            className={`ml-2 bg-gray-300 text-black rounded-lg hover:bg-gray-400 transition-colors duration-200`}
+                                                            disabled={isSaving}
+                                                            className={`ml-2 bg-gray-300 text-black rounded-lg hover:bg-gray-400 transition-colors duration-200 ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
                                                             onClick={() => {
                                                                 setIsEditing(false);
                                                                 setEditId(null);
@@ -178,7 +183,8 @@ export default function TransactionsPage() {
                                                     </td><td>
                                                         <div>
                                                             <button
-                                                                className=" bg-black text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
+                                                                disabled={isDeleting}
+                                                                className={`bg-black text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 ${isDeleting && tx._id === deleteId ? "opacity-50 cursor-not-allowed" : ""}`}
                                                                 onClick={() => {
                                                                     setIsEditing(true);
                                                                     setEditId(tx._id);
