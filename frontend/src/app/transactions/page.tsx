@@ -37,7 +37,7 @@ export default function TransactionsPage() {
   const [form, setForm] = useState(initialForm);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  // const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -127,7 +127,7 @@ export default function TransactionsPage() {
   const handleDeleteTransaction = async (id: string) => {
     if (!window.confirm(`Are you sure you want to delete this transaction?`)) {
       setIsDeleting(false);
-      setDeleteId(null);
+      // setDeleteId(null);
       return;
     }
     try {
@@ -137,7 +137,7 @@ export default function TransactionsPage() {
       console.error("Error deleting transaction:", err);
     } finally {
       setIsDeleting(false);
-      setDeleteId(null);
+      // setDeleteId(null);
     }
   };
 
@@ -419,7 +419,7 @@ export default function TransactionsPage() {
                               className="bg-[#dc3545] text-white rounded-lg px-3 py-1 disabled:opacity-50"
                               disabled={isDeleting || isAddingNew || isEditing}
                               onClick={() => {
-                                setDeleteId(tx._id);
+                                // setDeleteId(tx._id);
                                 setIsDeleting(true);
                                 handleDeleteTransaction(tx._id);
                               }}
