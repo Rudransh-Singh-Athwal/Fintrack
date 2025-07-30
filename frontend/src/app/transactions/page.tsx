@@ -56,10 +56,7 @@ export default function TransactionsPage() {
   const fetchTransactions = async () => {
     try {
       const response = await axios.get(`${API}/api/transactions`);
-      const sortedTransactions = await response.data.sort(
-        (a: { amount: number }, b: { amount: number }) => b.amount - a.amount
-      );
-      setTransactions(sortedTransactions);
+      setTransactions(response.data);
     } catch (err) {
       console.error("Error fetching transactions:", err);
     } finally {
@@ -187,11 +184,11 @@ export default function TransactionsPage() {
                 <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl max-w-[200px]">
                   Description
                 </th>
-                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
-                  Amount
-                </th>
                 <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-2/12">
                   Category
+                </th>
+                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
+                  Amount
                 </th>
                 <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
                   {/* Actions */}
@@ -229,21 +226,6 @@ export default function TransactionsPage() {
                   </td>
 
                   <td className="p-2 text-center">
-                    <input
-                      type="number"
-                      value={form.amount || ""}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          amount: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="border rounded p-1 w-full"
-                      placeholder="Amount"
-                    />
-                  </td>
-
-                  <td className="p-2 text-center">
                     <select
                       value={form.category}
                       onChange={(e) =>
@@ -257,6 +239,21 @@ export default function TransactionsPage() {
                         </option>
                       ))}
                     </select>
+                  </td>
+
+                  <td className="p-2 text-center">
+                    <input
+                      type="number"
+                      value={form.amount || ""}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          amount: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      className="border rounded p-1 w-full"
+                      placeholder="Amount"
+                    />
                   </td>
 
                   <td className="p-2 text-center">
