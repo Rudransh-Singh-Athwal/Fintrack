@@ -136,6 +136,7 @@ export default function TransactionsPage() {
       setEditId(null);
       setForm(initialForm);
       setIsSaving(false);
+      fetchTransactions();
     }
   };
 
@@ -175,297 +176,293 @@ export default function TransactionsPage() {
             </button>
           </div>
 
-          <table className="text-left shadow-lg rounded-2xl rounded-tl-2xl rounded-tr-2xl overflow-hidden">
-            <thead>
-              <tr className="text-lg bg-gray-200">
-                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-2/12">
-                  Date
-                </th>
-                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl max-w-[200px]">
-                  Description
-                </th>
-                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-2/12">
-                  Category
-                </th>
-                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
-                  Amount
-                </th>
-                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
-                  {/* Actions */}
-                </th>
-                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
-                  {/* Actions */}
-                </th>
-              </tr>
-            </thead>
-
-            <tbody className="text-lg text-[#747474]">
-              {isAddingNew && (
-                <tr className="bg-blue-50">
-                  <td className="p-2 text-center">
-                    <input
-                      type="date"
-                      value={form.date}
-                      onChange={(e) =>
-                        setForm({ ...form, date: e.target.value })
-                      }
-                      className="border rounded p-1 w-full"
-                    />
-                  </td>
-
-                  <td className="p-2 text-center">
-                    <input
-                      type="text"
-                      value={form.description}
-                      onChange={(e) =>
-                        setForm({ ...form, description: e.target.value })
-                      }
-                      className="border rounded p-1 w-full"
-                      placeholder="Description"
-                    />
-                  </td>
-
-                  <td className="p-2 text-center">
-                    <select
-                      value={form.category}
-                      onChange={(e) =>
-                        setForm({ ...form, category: e.target.value })
-                      }
-                      className="border rounded p-1.5 w-full"
-                    >
-                      {spendingCategories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-
-                  <td className="p-2 text-center">
-                    <input
-                      type="number"
-                      value={form.amount || ""}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          amount: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="border rounded p-1 w-full"
-                      placeholder="Amount"
-                    />
-                  </td>
-
-                  <td className="p-2 text-center">
-                    <button
-                      className={`bg-green-500 text-white rounded-lg transition-colors hover:cursor-pointer duration-200 px-3 py-1 disabled:opacity-50 ${
-                        isSaving ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                      onClick={() => {
-                        setIsSaving(true);
-                        handleAddTransaction();
-                      }}
-                      disabled={isSaving}
-                    >
-                      {isSaving ? "Saving..." : "Save"}
-                    </button>
-                  </td>
-
-                  <td className="p-2 text-center">
-                    <button
-                      className={`ml-2 bg-[#888] text-white rounded-lg hover:cursor-pointer transition-colors duration-200 px-3 py-1 ${
-                        isSaving ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                      onClick={() => {
-                        setIsAddingNew(false);
-                        setForm(initialForm);
-                      }}
-                      disabled={isSaving}
-                    >
-                      Cancel
-                    </button>
-                  </td>
+          <div className="w-full shadow-lg rounded-2xl overflow-y-auto max-h-[70vh]">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="text-lg bg-gray-200 sticky top-0 z-10">
+                  <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-2/12">
+                    Date
+                  </th>
+                  <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl max-w-[200px]">
+                    Description
+                  </th>
+                  <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-2/12">
+                    Category
+                  </th>
+                  <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
+                    Amount
+                  </th>
+                  <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12"></th>
+                  <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12"></th>
                 </tr>
-              )}
+              </thead>
 
-              {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="p-4 text-2xl text-center text-gray-500"
-                  >
-                    Loading transactions...
-                  </td>
-                </tr>
-              ) : transactions.length > 0 ? (
-                transactions.map((tx) => (
-                  <tr
-                    key={tx._id}
-                    className="hover:bg-gray-100 transition-colors duration-200"
-                  >
-                    {isEditing && editId === tx._id ? (
-                      <>
-                        <td className="p-2 text-center">
-                          <input
-                            type="date"
-                            value={form.date}
-                            onChange={(e) =>
-                              setForm({ ...form, date: e.target.value })
-                            }
-                            className="border rounded p-1 w-full"
-                          />
-                        </td>
-                        <td className="p-2 text-center">
-                          <input
-                            type="text"
-                            value={form.description}
-                            onChange={(e) =>
-                              setForm({
-                                ...form,
-                                description: e.target.value,
-                              })
-                            }
-                            className="border rounded p-1 w-full"
-                          />
-                        </td>
-                        <td className="p-2 text-center">
-                          <input
-                            type="number"
-                            value={form.amount}
-                            onChange={(e) =>
-                              setForm({
-                                ...form,
-                                amount: parseFloat(e.target.value),
-                              })
-                            }
-                            className="border rounded p-1 w-full"
-                          />
-                        </td>
+              <tbody className="text-lg text-[#747474]">
+                {isAddingNew && (
+                  <tr className="bg-blue-50">
+                    <td className="p-2 text-center">
+                      <input
+                        type="date"
+                        value={form.date}
+                        onChange={(e) =>
+                          setForm({ ...form, date: e.target.value })
+                        }
+                        className="border rounded p-1 w-full"
+                      />
+                    </td>
 
-                        <td className="p-2 text-center">
-                          <select
-                            value={form.category}
-                            onChange={(e) =>
-                              setForm({ ...form, category: e.target.value })
-                            }
-                            className="border rounded p-1.5 w-full"
-                          >
-                            {spendingCategories.map((cat) => (
-                              <option key={cat} value={cat}>
-                                {cat}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="p-2 text-center">
-                          <button
-                            disabled={
-                              !form.date ||
-                              !form.description ||
-                              form.amount === 0 ||
-                              isSaving
-                            }
-                            className={`bg-green-500 text-white hover:cursor-pointer rounded-lg hover:bg-green-600 transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
-                              !form.date ||
-                              !form.description ||
-                              form.amount === 0 ||
-                              isSaving
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                            }`}
-                            onClick={() => {
-                              handleEditTransaction(tx._id);
-                              setIsSaving(true);
-                            }}
-                          >
-                            {isSaving ? "Saving..." : "Save"}
-                          </button>
-                        </td>
-                        <td className="p-2 text-center">
-                          <button
-                            disabled={isSaving}
-                            className={`bg-[#888] text-white rounded-lg transition-colors hover:cursor-pointer duration-200 px-3 py-1 disabled:opacity-50 ${
-                              isSaving ? "opacity-50 cursor-not-allowed" : ""
-                            }`}
-                            onClick={() => {
-                              setIsEditing(false);
-                              setEditId(null);
-                              setForm(initialForm);
-                            }}
-                          >
-                            Cancel
-                          </button>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="p-2 text-center text-nowrap">
-                          {new Date(tx.date).toISOString().slice(0, 10)}
-                        </td>
-                        <td className="p-2 text-center">{tx.description}</td>
-                        <td className="p-2 text-center text-nowrap">
-                          {tx.amount < 0 ? "-" : ""}₹
-                          {Math.abs(tx.amount).toFixed(2)}
-                        </td>
-                        <td className="p-2 text-center">{tx.category}</td>
+                    <td className="p-2 text-center">
+                      <input
+                        type="text"
+                        value={form.description}
+                        onChange={(e) =>
+                          setForm({ ...form, description: e.target.value })
+                        }
+                        className="border rounded p-1 w-full"
+                        placeholder="Description"
+                      />
+                    </td>
 
-                        <td className="p-2 text-center">
-                          <button
-                            disabled={isDeleting}
-                            className={`bg-[#007bff] text-white rounded-lg hover:cursor-pointer transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
-                              isDeleting && tx._id === deleteId
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                            }`}
-                            onClick={() => {
-                              setIsEditing(true);
-                              setEditId(tx._id);
-                              setForm({
-                                date: new Date(tx.date)
-                                  .toISOString()
-                                  .slice(0, 10),
-                                description: tx.description,
-                                amount: tx.amount,
-                                category: tx.category || "Miscellaneous",
-                              });
-                            }}
-                          >
-                            Edit
-                          </button>
-                        </td>
-                        <td className="p-2 text-center">
-                          <button
-                            className={`bg-[#dc3545] text-white rounded-lg hover:bg-red-600 hover:cursor-pointer transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
-                              isDeleting && tx._id === deleteId
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                            }`}
-                            disabled={isDeleting}
-                            onClick={() => {
-                              setDeleteId(tx._id);
-                              setIsDeleting(true);
-                              handleDeleteTransaction(tx._id);
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </>
-                    )}
+                    <td className="p-2 text-center">
+                      <select
+                        value={form.category}
+                        onChange={(e) =>
+                          setForm({ ...form, category: e.target.value })
+                        }
+                        className="border rounded p-1.5 w-full"
+                      >
+                        {spendingCategories.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+
+                    <td className="p-2 text-center">
+                      <input
+                        type="number"
+                        value={form.amount || ""}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            amount: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        className="border rounded p-1 w-full"
+                        placeholder="Amount"
+                      />
+                    </td>
+
+                    <td className="p-2 text-center">
+                      <button
+                        className={`bg-green-500 text-white rounded-lg transition-colors hover:cursor-pointer duration-200 px-3 py-1 disabled:opacity-50 ${
+                          isSaving ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                        onClick={() => {
+                          setIsSaving(true);
+                          handleAddTransaction();
+                        }}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? "Saving..." : "Save"}
+                      </button>
+                    </td>
+
+                    <td className="p-2 text-center">
+                      <button
+                        className={`ml-2 bg-[#888] text-white rounded-lg hover:cursor-pointer transition-colors duration-200 px-3 py-1 ${
+                          isSaving ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                        onClick={() => {
+                          setIsAddingNew(false);
+                          setForm(initialForm);
+                        }}
+                        disabled={isSaving}
+                      >
+                        Cancel
+                      </button>
+                    </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="p-4 text-center text-gray-500 italic"
-                  >
-                    No transactions found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+
+                {isLoading ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="p-4 text-2xl text-center text-gray-500"
+                    >
+                      Loading transactions...
+                    </td>
+                  </tr>
+                ) : transactions.length > 0 ? (
+                  transactions.map((tx) => (
+                    <tr
+                      key={tx._id}
+                      className="hover:bg-gray-100 transition-colors duration-200"
+                    >
+                      {isEditing && editId === tx._id ? (
+                        <>
+                          <td className="p-2 text-center">
+                            <input
+                              type="date"
+                              value={form.date}
+                              onChange={(e) =>
+                                setForm({ ...form, date: e.target.value })
+                              }
+                              className="border rounded p-1 w-full"
+                            />
+                          </td>
+                          <td className="p-2 text-center">
+                            <input
+                              type="text"
+                              value={form.description}
+                              onChange={(e) =>
+                                setForm({
+                                  ...form,
+                                  description: e.target.value,
+                                })
+                              }
+                              className="border rounded p-1 w-full"
+                            />
+                          </td>
+                          <td className="p-2 text-center">
+                            <select
+                              value={form.category}
+                              onChange={(e) =>
+                                setForm({ ...form, category: e.target.value })
+                              }
+                              className="border rounded p-1.5 w-full"
+                            >
+                              {spendingCategories.map((cat) => (
+                                <option key={cat} value={cat}>
+                                  {cat}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="p-2 text-center">
+                            <input
+                              type="number"
+                              value={form.amount}
+                              onChange={(e) =>
+                                setForm({
+                                  ...form,
+                                  amount: parseFloat(e.target.value),
+                                })
+                              }
+                              className="border rounded p-1 w-full"
+                            />
+                          </td>
+                          <td className="p-2 text-center">
+                            <button
+                              disabled={
+                                !form.date ||
+                                !form.description ||
+                                form.amount === 0 ||
+                                isSaving
+                              }
+                              className={`bg-green-500 text-white hover:cursor-pointer rounded-lg hover:bg-green-600 transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
+                                !form.date ||
+                                !form.description ||
+                                form.amount === 0 ||
+                                isSaving
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
+                              onClick={() => {
+                                handleEditTransaction(tx._id);
+                                setIsSaving(true);
+                              }}
+                            >
+                              {isSaving ? "Saving..." : "Save"}
+                            </button>
+                          </td>
+                          <td className="p-2 text-center">
+                            <button
+                              disabled={isSaving}
+                              className={`bg-[#888] text-white rounded-lg transition-colors hover:cursor-pointer duration-200 px-3 py-1 disabled:opacity-50 ${
+                                isSaving ? "opacity-50 cursor-not-allowed" : ""
+                              }`}
+                              onClick={() => {
+                                setIsEditing(false);
+                                setEditId(null);
+                                setForm(initialForm);
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="p-2 text-center text-nowrap">
+                            {new Date(tx.date).toISOString().slice(0, 10)}
+                          </td>
+                          <td className="p-2 text-center">{tx.description}</td>
+                          <td className="p-2 text-center">{tx.category}</td>
+                          <td className="p-2 text-center text-nowrap">
+                            {tx.amount < 0 ? "-" : ""}₹
+                            {Math.abs(tx.amount).toFixed(2)}
+                          </td>
+                          <td className="p-2 text-center">
+                            <button
+                              disabled={isDeleting}
+                              className={`bg-[#007bff] text-white rounded-lg hover:cursor-pointer transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
+                                isDeleting && tx._id === deleteId
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
+                              onClick={() => {
+                                setIsEditing(true);
+                                setEditId(tx._id);
+                                setForm({
+                                  date: new Date(tx.date)
+                                    .toISOString()
+                                    .slice(0, 10),
+                                  description: tx.description,
+                                  amount: tx.amount,
+                                  category: tx.category || "Miscellaneous",
+                                });
+                              }}
+                            >
+                              Edit
+                            </button>
+                          </td>
+                          <td className="p-2 text-center">
+                            <button
+                              className={`bg-[#dc3545] text-white rounded-lg hover:bg-red-600 hover:cursor-pointer transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
+                                isDeleting && tx._id === deleteId
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
+                              disabled={isDeleting}
+                              onClick={() => {
+                                setDeleteId(tx._id);
+                                setIsDeleting(true);
+                                handleDeleteTransaction(tx._id);
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="p-4 text-center text-gray-500 italic"
+                    >
+                      No transactions found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
