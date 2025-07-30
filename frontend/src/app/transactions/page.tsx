@@ -6,25 +6,15 @@ import React, { useEffect, useState } from "react";
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 const spendingCategories = [
-  "Miscellaneous",
-  "Groceries",
-  "Utilities",
-  "Rent/Mortgage",
-  "Transportation",
-  "Dining Out",
-  "Entertainment",
+  "Salary",
+  "Income",
+  "Food",
   "Healthcare",
+  "Fuel",
+  "Entertainment",
   "Shopping",
   "Travel",
-  "Income",
-  "Salary",
-  "Investment",
-  "Gifts/Donations",
-  "Education",
-  "Subscriptions",
-  "Insurance",
-  "Taxes",
-  "Electronics",
+  "Miscellaneous",
 ];
 
 type Transaction = {
@@ -41,6 +31,7 @@ export default function TransactionsPage() {
     description: "",
     amount: 0,
     category: "Miscellaneous",
+    type: "Debit",
   };
   const [isLoading, setIsLoading] = useState(true);
   const [form, setForm] = useState(initialForm);
@@ -84,16 +75,15 @@ export default function TransactionsPage() {
     }
 
     try {
+      const finalAmount =
+        form.type === "Debit" ? -Math.abs(form.amount) : Math.abs(form.amount);
       const newTransaction = {
-        ...form,
-        description: form.description || "Miscellaneous",
         date: new Date(form.date).toISOString(),
+        description: form.description || "Miscellaneous",
+        category: form.category,
+        amount: finalAmount,
       };
-      const response = await axios.post(
-        `${API}/api/transactions`,
-        newTransaction
-      );
-      setTransactions([...transactions, response.data]);
+      await axios.post(`${API}/api/transactions`, newTransaction);
     } catch (err) {
       console.error("Error adding transaction:", err);
     } finally {
@@ -108,27 +98,21 @@ export default function TransactionsPage() {
     if (!editId) return;
 
     try {
-      const updatedTransaction = {
-        ...form,
-        date: new Date(form.date).toISOString(),
-      };
-
-      if (
-        !updatedTransaction.date ||
-        !updatedTransaction.description ||
-        updatedTransaction.amount === 0 ||
-        !updatedTransaction.category
-      ) {
+      if (!form.date || !form.description || form.amount === 0) {
         setIsSaving(false);
         alert("Please fill in all fields correctly.");
         return;
       }
+      const finalAmount =
+        form.type === "Debit" ? -Math.abs(form.amount) : Math.abs(form.amount);
+      const updatedTransaction = {
+        date: new Date(form.date).toISOString(),
+        description: form.description,
+        category: form.category,
+        amount: finalAmount,
+      };
+
       await axios.put(`${API}/api/transactions/${id}`, updatedTransaction);
-      setTransactions(
-        transactions.map((tx) =>
-          tx._id === id ? { ...tx, ...updatedTransaction } : tx
-        )
-      );
     } catch (err) {
       console.error("Error updating transaction:", err);
     } finally {
@@ -158,18 +142,20 @@ export default function TransactionsPage() {
   };
 
   return (
-    <div className="text-3xl text-center bg-white w-full h-screen">
+    <div className="text-3xl text-center bg-white w-full min-h-screen">
       <Navbar />
       <div className="flex flex-col items-center mt-10">
-        <div className="w-[60%] flex flex-col items-center">
-          <div className="flex justify-around text-nowrap w-full">
+        <div className="w-[80%] flex flex-col items-center">
+          <div className="flex justify-between text-nowrap w-full">
             <h1 className="w-full text-4xl font-bold text-gray-800 mb-6 py-3 text-start">
               Transactions
             </h1>
-
             <button
-              className="bg-[#28a745] hover:cursor-pointer text-white text-lg p-3 h-[60%] rounded-4xl self-center"
-              onClick={() => setIsAddingNew(true)}
+              className="bg-[#28a745] hover:cursor-pointer text-white text-lg px-4 py-2 h-fit rounded-lg self-center"
+              onClick={() => {
+                setIsAddingNew(true);
+                setForm(initialForm);
+              }}
               disabled={isAddingNew}
             >
               Add transaction
@@ -180,23 +166,23 @@ export default function TransactionsPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="text-lg bg-gray-200 sticky top-0 z-10">
-                  <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-2/12">
+                  <th className="p-2 text-center text-black font-light text-xl">
                     Date
                   </th>
-                  <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl max-w-[200px]">
+                  <th className="p-2 text-center text-black font-light text-xl">
                     Description
                   </th>
-                  <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-2/12">
+                  <th className="p-2 text-center text-black font-light text-xl">
                     Category
                   </th>
-                  <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
+                  <th className="p-2 text-center text-black font-light text-xl">
                     Amount
                   </th>
-                  <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12"></th>
-                  <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12"></th>
+                  <th className="p-2 text-center text-black font-light text-xl">
+                    Actions
+                  </th>
                 </tr>
               </thead>
-
               <tbody className="text-lg text-[#747474]">
                 {isAddingNew && (
                   <tr className="bg-blue-50">
@@ -210,7 +196,6 @@ export default function TransactionsPage() {
                         className="border rounded p-1 w-full"
                       />
                     </td>
-
                     <td className="p-2 text-center">
                       <input
                         type="text"
@@ -222,7 +207,6 @@ export default function TransactionsPage() {
                         placeholder="Description"
                       />
                     </td>
-
                     <td className="p-2 text-center">
                       <select
                         value={form.category}
@@ -238,27 +222,35 @@ export default function TransactionsPage() {
                         ))}
                       </select>
                     </td>
-
                     <td className="p-2 text-center">
-                      <input
-                        type="number"
-                        value={form.amount || ""}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            amount: parseFloat(e.target.value) || 0,
-                          })
-                        }
-                        className="border rounded p-1 w-full"
-                        placeholder="Amount"
-                      />
+                      <div className="flex gap-2">
+                        <select
+                          value={form.type}
+                          onChange={(e) =>
+                            setForm({ ...form, type: e.target.value })
+                          }
+                          className="border rounded p-1.5"
+                        >
+                          <option value="Debit">Debit</option>
+                          <option value="Credit">Credit</option>
+                        </select>
+                        <input
+                          type="number"
+                          value={form.amount || ""}
+                          onChange={(e) =>
+                            setForm({
+                              ...form,
+                              amount: Math.abs(parseFloat(e.target.value) || 0),
+                            })
+                          }
+                          className="border rounded p-1 w-full"
+                          placeholder="Amount"
+                        />
+                      </div>
                     </td>
-
-                    <td className="p-2 text-center">
+                    <td className="p-2 text-center flex gap-2 justify-center">
                       <button
-                        className={`bg-green-500 text-white rounded-lg transition-colors hover:cursor-pointer duration-200 px-3 py-1 disabled:opacity-50 ${
-                          isSaving ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
+                        className="bg-green-500 text-white rounded-lg px-3 py-1 disabled:opacity-50"
                         onClick={() => {
                           setIsSaving(true);
                           handleAddTransaction();
@@ -267,13 +259,8 @@ export default function TransactionsPage() {
                       >
                         {isSaving ? "Saving..." : "Save"}
                       </button>
-                    </td>
-
-                    <td className="p-2 text-center">
                       <button
-                        className={`ml-2 bg-[#888] text-white rounded-lg hover:cursor-pointer transition-colors duration-200 px-3 py-1 ${
-                          isSaving ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
+                        className="bg-[#888] text-white rounded-lg px-3 py-1"
                         onClick={() => {
                           setIsAddingNew(false);
                           setForm(initialForm);
@@ -285,11 +272,10 @@ export default function TransactionsPage() {
                     </td>
                   </tr>
                 )}
-
                 {isLoading ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={5}
                       className="p-4 text-2xl text-center text-gray-500"
                     >
                       Loading transactions...
@@ -342,52 +328,49 @@ export default function TransactionsPage() {
                             </select>
                           </td>
                           <td className="p-2 text-center">
-                            <input
-                              type="number"
-                              value={form.amount}
-                              onChange={(e) =>
-                                setForm({
-                                  ...form,
-                                  amount: parseFloat(e.target.value),
-                                })
-                              }
-                              className="border rounded p-1 w-full"
-                            />
+                            <div className="flex gap-2">
+                              <select
+                                value={form.type}
+                                onChange={(e) =>
+                                  setForm({ ...form, type: e.target.value })
+                                }
+                                className="border rounded p-1.5"
+                              >
+                                <option value="Debit">Debit</option>
+                                <option value="Credit">Credit</option>
+                              </select>
+                              <input
+                                type="number"
+                                value={form.amount}
+                                onChange={(e) =>
+                                  setForm({
+                                    ...form,
+                                    amount: Math.abs(
+                                      parseFloat(e.target.value) || 0
+                                    ),
+                                  })
+                                }
+                                className="border rounded p-1 w-full"
+                              />
+                            </div>
                           </td>
-                          <td className="p-2 text-center">
+                          <td className="p-2 text-center flex gap-2 justify-center">
                             <button
-                              disabled={
-                                !form.date ||
-                                !form.description ||
-                                form.amount === 0 ||
-                                isSaving
-                              }
-                              className={`bg-green-500 text-white hover:cursor-pointer rounded-lg hover:bg-green-600 transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
-                                !form.date ||
-                                !form.description ||
-                                form.amount === 0 ||
-                                isSaving
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
+                              disabled={isSaving}
+                              className="bg-green-500 text-white rounded-lg px-3 py-1 disabled:opacity-50"
                               onClick={() => {
-                                handleEditTransaction(tx._id);
                                 setIsSaving(true);
+                                handleEditTransaction(tx._id);
                               }}
                             >
                               {isSaving ? "Saving..." : "Save"}
                             </button>
-                          </td>
-                          <td className="p-2 text-center">
                             <button
                               disabled={isSaving}
-                              className={`bg-[#888] text-white rounded-lg transition-colors hover:cursor-pointer duration-200 px-3 py-1 disabled:opacity-50 ${
-                                isSaving ? "opacity-50 cursor-not-allowed" : ""
-                              }`}
+                              className="bg-[#888] text-white rounded-lg px-3 py-1 disabled:opacity-50"
                               onClick={() => {
                                 setIsEditing(false);
                                 setEditId(null);
-                                setForm(initialForm);
                               }}
                             >
                               Cancel
@@ -402,17 +385,20 @@ export default function TransactionsPage() {
                           <td className="p-2 text-center">{tx.description}</td>
                           <td className="p-2 text-center">{tx.category}</td>
                           <td className="p-2 text-center text-nowrap">
-                            {tx.amount < 0 ? "-" : ""}₹
-                            {Math.abs(tx.amount).toFixed(2)}
+                            {tx.amount > 0 ? (
+                              <span className="text-green-500 font-semibold">
+                                ₹{tx.amount.toFixed(2)}
+                              </span>
+                            ) : (
+                              <span className="text-red-500 font-semibold">
+                                ₹{Math.abs(tx.amount).toFixed(2)}
+                              </span>
+                            )}
                           </td>
-                          <td className="p-2 text-center">
+                          <td className="p-2 text-center flex gap-2 justify-center">
                             <button
-                              disabled={isDeleting}
-                              className={`bg-[#007bff] text-white rounded-lg hover:cursor-pointer transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
-                                isDeleting && tx._id === deleteId
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
+                              disabled={isDeleting || isAddingNew || isEditing}
+                              className="bg-[#007bff] text-white rounded-lg px-3 py-1 disabled:opacity-50"
                               onClick={() => {
                                 setIsEditing(true);
                                 setEditId(tx._id);
@@ -421,22 +407,17 @@ export default function TransactionsPage() {
                                     .toISOString()
                                     .slice(0, 10),
                                   description: tx.description,
-                                  amount: tx.amount,
+                                  amount: Math.abs(tx.amount),
                                   category: tx.category || "Miscellaneous",
+                                  type: tx.amount < 0 ? "Debit" : "Credit",
                                 });
                               }}
                             >
                               Edit
                             </button>
-                          </td>
-                          <td className="p-2 text-center">
                             <button
-                              className={`bg-[#dc3545] text-white rounded-lg hover:bg-red-600 hover:cursor-pointer transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
-                                isDeleting && tx._id === deleteId
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
-                              disabled={isDeleting}
+                              className="bg-[#dc3545] text-white rounded-lg px-3 py-1 disabled:opacity-50"
+                              disabled={isDeleting || isAddingNew || isEditing}
                               onClick={() => {
                                 setDeleteId(tx._id);
                                 setIsDeleting(true);
@@ -453,7 +434,7 @@ export default function TransactionsPage() {
                 ) : (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={5}
                       className="p-4 text-center text-gray-500 italic"
                     >
                       No transactions found.

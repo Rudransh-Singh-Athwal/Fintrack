@@ -10,8 +10,12 @@ export default function Navbar() {
         <a href="/transactions" className="hover:text-blue-600">
           Transactions
         </a>
-        {/* <a href="/budgets" className="hover:text-blue-600">Budgets</a>
-        <a href="/reports" className="hover:text-blue-600">Reports</a> */}
+        {/* <a href="/budgets" className="hover:text-blue-600">
+          Budgets
+        </a>
+        <a href="/reports" className="hover:text-blue-600">
+          Reports
+        </a> */}
       </div>
     </nav>
   );
