@@ -13,7 +13,12 @@ const transactionSchema = new mongoose.Schema({
         type: String,
         trim: true,
         default: "Miscellaneous",
-    }
+    },
+    category: {
+        type: String,
+        trim: true,
+        default: "Miscellaneous",
+    },
 }, { timestamps: true, }
 );
 
