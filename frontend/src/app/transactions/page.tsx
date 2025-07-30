@@ -5,25 +5,53 @@ import React, { useEffect, useState } from "react";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
+const spendingCategories = [
+  "Miscellaneous",
+  "Groceries",
+  "Utilities",
+  "Rent/Mortgage",
+  "Transportation",
+  "Dining Out",
+  "Entertainment",
+  "Healthcare",
+  "Shopping",
+  "Travel",
+  "Income",
+  "Salary",
+  "Investment",
+  "Gifts/Donations",
+  "Education",
+  "Subscriptions",
+  "Insurance",
+  "Taxes",
+  "Electronics",
+];
+
+type Transaction = {
+  _id: string;
+  date: string;
+  description: string;
+  amount: number;
+  category: string;
+};
+
 export default function TransactionsPage() {
-  const initialForm = { date: "", description: "", amount: 0 };
+  const initialForm = {
+    date: "",
+    description: "",
+    amount: 0,
+    category: "Miscellaneous",
+  };
   const [isLoading, setIsLoading] = useState(true);
   const [form, setForm] = useState(initialForm);
-  const [isEditing, setIsEditing] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAddingNew, setIsAddingNew] = useState(false);
 
-  const [transactions, setTransactions] = useState<
-    {
-      _id: string;
-      date: string;
-      description: string;
-      amount: number;
-    }[]
-  >([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const fetchTransactions = async () => {
     try {
@@ -44,19 +72,24 @@ export default function TransactionsPage() {
   }, []);
 
   const handleAddTransaction = async () => {
-    if (!form.date || form.amount === 0) {
+    if (!form.date || form.amount === 0 || !form.description) {
       setIsSaving(false);
-      alert("Please fill in all fields correctly.");
+      const missingFields = [];
+      if (!form.date) missingFields.push("Date");
+      if (form.amount === 0) missingFields.push("Amount");
+      if (!form.description) missingFields.push("Description");
+      alert(
+        `Please fill in the following fields correctly: ${missingFields.join(
+          ", "
+        )}`
+      );
       return;
-    }
-
-    if (!form.description) {
-      form.description = "Miscellaneous";
     }
 
     try {
       const newTransaction = {
         ...form,
+        description: form.description || "Miscellaneous",
         date: new Date(form.date).toISOString(),
       };
       const response = await axios.post(
@@ -86,7 +119,8 @@ export default function TransactionsPage() {
       if (
         !updatedTransaction.date ||
         !updatedTransaction.description ||
-        updatedTransaction.amount === 0
+        updatedTransaction.amount === 0 ||
+        !updatedTransaction.category
       ) {
         setIsSaving(false);
         alert("Please fill in all fields correctly.");
@@ -156,6 +190,9 @@ export default function TransactionsPage() {
                 <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
                   Amount
                 </th>
+                <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-2/12">
+                  Category
+                </th>
                 <th className="text-nowrap p-2 text-center text-black text-shadow-gray-900 font-light text-xl  w-1/12">
                   {/* Actions */}
                 </th>
@@ -178,6 +215,7 @@ export default function TransactionsPage() {
                       className="border rounded p-1 w-full"
                     />
                   </td>
+
                   <td className="p-2 text-center">
                     <input
                       type="text"
@@ -189,6 +227,7 @@ export default function TransactionsPage() {
                       placeholder="Description"
                     />
                   </td>
+
                   <td className="p-2 text-center">
                     <input
                       type="number"
@@ -203,6 +242,23 @@ export default function TransactionsPage() {
                       placeholder="Amount"
                     />
                   </td>
+
+                  <td className="p-2 text-center">
+                    <select
+                      value={form.category}
+                      onChange={(e) =>
+                        setForm({ ...form, category: e.target.value })
+                      }
+                      className="border rounded p-1.5 w-full"
+                    >
+                      {spendingCategories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+
                   <td className="p-2 text-center">
                     <button
                       className={`bg-green-500 text-white rounded-lg transition-colors hover:cursor-pointer duration-200 px-3 py-1 disabled:opacity-50 ${
@@ -238,7 +294,7 @@ export default function TransactionsPage() {
               {isLoading ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="p-4 text-2xl text-center text-gray-500"
                   >
                     Loading transactions...
@@ -288,6 +344,22 @@ export default function TransactionsPage() {
                             className="border rounded p-1 w-full"
                           />
                         </td>
+
+                        <td className="p-2 text-center">
+                          <select
+                            value={form.category}
+                            onChange={(e) =>
+                              setForm({ ...form, category: e.target.value })
+                            }
+                            className="border rounded p-1.5 w-full"
+                          >
+                            {spendingCategories.map((cat) => (
+                              <option key={cat} value={cat}>
+                                {cat}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
                         <td className="p-2 text-center">
                           <button
                             disabled={
@@ -312,7 +384,6 @@ export default function TransactionsPage() {
                             {isSaving ? "Saving..." : "Save"}
                           </button>
                         </td>
-
                         <td className="p-2 text-center">
                           <button
                             disabled={isSaving}
@@ -339,6 +410,7 @@ export default function TransactionsPage() {
                           {tx.amount < 0 ? "-" : ""}₹
                           {Math.abs(tx.amount).toFixed(2)}
                         </td>
+                        <td className="p-2 text-center">{tx.category}</td>
 
                         <td className="p-2 text-center">
                           <button
@@ -357,13 +429,13 @@ export default function TransactionsPage() {
                                   .slice(0, 10),
                                 description: tx.description,
                                 amount: tx.amount,
+                                category: tx.category || "Miscellaneous",
                               });
                             }}
                           >
                             Edit
                           </button>
                         </td>
-
                         <td className="p-2 text-center">
                           <button
                             className={`bg-[#dc3545] text-white rounded-lg hover:bg-red-600 hover:cursor-pointer transition-colors duration-200 px-3 py-1 disabled:opacity-50 ${
@@ -388,7 +460,7 @@ export default function TransactionsPage() {
               ) : (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="p-4 text-center text-gray-500 italic"
                   >
                     No transactions found.
