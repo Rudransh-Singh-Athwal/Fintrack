@@ -366,7 +366,7 @@ export default function App() {
             </a>
           </div>
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="w-full shadow-lg rounded-2xl">
+            <div className="w-full shadow-lg rounded-2xl overflow-auto">
               <table className="w-full text-left">
                 <thead>
                   <tr className="text-lg bg-gray-200 sticky top-0 z-10">
