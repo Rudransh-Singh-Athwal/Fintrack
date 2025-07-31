@@ -143,7 +143,7 @@ export default function TransactionsPage() {
       <div className="flex flex-col items-center mt-10 p-4 lg:p-0">
         <div className="w-full lg:w-[80%] flex flex-col items-center">
           <div className="flex flex-col w-full mb-6 lg:flex-row lg:justify-between lg:text-nowrap">
-            <h1 className="w-full text-3xl lg:text-4xl font-bold text-gray-800 mb-4 py-3 text-start lg:mb-6">
+            <h1 className="text-3xl font-bold tracking-tight mb-6 text-black">
               Transactions
             </h1>
             <button
