@@ -155,8 +155,11 @@ export default function App() {
     return { labels: allMonthLabels, values };
   }, [transactions, selectedYear]);
 
-  const categoryStats = useMemo(() => {
-    const expenses = transactions.filter((t) => t.amount < 0);
+  const expenseCategoryStats = useMemo(() => {
+    const yearlyTransactions = transactions.filter(
+      (t) => new Date(t.date).getFullYear() === selectedYear
+    );
+    const expenses = yearlyTransactions.filter((t) => t.amount < 0);
     const totalExpenses = expenses.reduce(
       (sum, t) => sum + Math.abs(t.amount),
       1
@@ -175,7 +178,29 @@ export default function App() {
         color: COLORS[index % COLORS.length],
       }))
       .sort((a, b) => b.value - a.value);
-  }, [transactions]);
+  }, [transactions, selectedYear]);
+
+  const incomeCategoryStats = useMemo(() => {
+    const yearlyTransactions = transactions.filter(
+      (t) => new Date(t.date).getFullYear() === selectedYear
+    );
+    const income = yearlyTransactions.filter((t) => t.amount > 0);
+    const totalIncome = income.reduce((sum, t) => sum + t.amount, 1);
+
+    const incomeByCategory = income.reduce((acc, transaction) => {
+      const { category, amount } = transaction;
+      acc[category] = (acc[category] || 0) + amount;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(incomeByCategory)
+      .map(([name, amount], index) => ({
+        name,
+        value: (amount / totalIncome) * 100,
+        color: COLORS[index % COLORS.length],
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, [transactions, selectedYear]);
 
   const recentTransactions = useMemo(() => {
     return [...transactions]
@@ -186,6 +211,9 @@ export default function App() {
   return (
     <div className="bg-gray-50 min-h-screen font-sans text-gray-900">
       <Navbar />
+      {isLoading && (
+        <p className="text-2xl font-semibold text-center mt-3">Loading...</p>
+      )}
       <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
@@ -246,42 +274,83 @@ export default function App() {
           </div>
         </div>
 
-        <div className="mb-12">
-          <h2 className="text-xl font-bold mb-4">Category Breakdown</h2>
-          <div className="bg-white p-6 rounded-xl shadow-sm flex flex-col sm:flex-row items-center gap-8">
-            <div className="w-48 h-48 flex-shrink-0">
-              <svg viewBox="0 0 100 100">
-                {(() => {
-                  let cumulativePercent = 0;
-                  return categoryStats.map((category, index) => {
-                    if (category.value === 0) return null;
-                    const startAngle = (cumulativePercent / 100) * 360;
-                    const endAngle =
-                      ((cumulativePercent + category.value) / 100) * 360;
-                    cumulativePercent += category.value;
-                    return (
-                      <path
-                        key={index}
-                        d={getArcPath(50, 50, 50, startAngle, endAngle)}
-                        fill={category.color}
-                      />
-                    );
-                  });
-                })()}
-              </svg>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+          <div>
+            <h2 className="text-xl font-bold mb-4">Expenditure Breakdown</h2>
+            <div className="bg-white p-6 rounded-xl shadow-sm flex flex-col sm:flex-row items-center gap-8 h-full">
+              <div className="w-48 h-48 flex-shrink-0">
+                <svg viewBox="0 0 100 100">
+                  {(() => {
+                    let cumulativePercent = 0;
+                    return expenseCategoryStats.map((category, index) => {
+                      if (category.value === 0) return null;
+                      const startAngle = (cumulativePercent / 100) * 360;
+                      const endAngle =
+                        ((cumulativePercent + category.value) / 100) * 360;
+                      cumulativePercent += category.value;
+                      return (
+                        <path
+                          key={index}
+                          d={getArcPath(50, 50, 50, startAngle, endAngle)}
+                          fill={category.color}
+                        />
+                      );
+                    });
+                  })()}
+                </svg>
+              </div>
+              <div className="w-full space-y-3">
+                {expenseCategoryStats.map((category, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div
+                      className="w-4 h-4 rounded-sm flex-shrink-0"
+                      style={{ backgroundColor: category.color }}
+                    ></div>
+                    <span className="text-gray-600 text-sm">
+                      {category.name} ({category.value.toFixed(2)}%)
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="w-full space-y-3">
-              {categoryStats.map((category, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div
-                    className="w-4 h-4 rounded-sm flex-shrink-0"
-                    style={{ backgroundColor: category.color }}
-                  ></div>
-                  <span className="text-gray-600 text-sm">
-                    {category.name} ({category.value.toFixed(2)}%)
-                  </span>
-                </div>
-              ))}
+          </div>
+          <div>
+            <h2 className="text-xl font-bold mb-4">Income Breakdown</h2>
+            <div className="bg-white p-6 rounded-xl shadow-sm flex flex-col sm:flex-row items-center gap-8 h-full">
+              <div className="w-48 h-48 flex-shrink-0">
+                <svg viewBox="0 0 100 100">
+                  {(() => {
+                    let cumulativePercent = 0;
+                    return incomeCategoryStats.map((category, index) => {
+                      if (category.value === 0) return null;
+                      const startAngle = (cumulativePercent / 100) * 360;
+                      const endAngle =
+                        ((cumulativePercent + category.value) / 100) * 360;
+                      cumulativePercent += category.value;
+                      return (
+                        <path
+                          key={index}
+                          d={getArcPath(50, 50, 50, startAngle, endAngle)}
+                          fill={category.color}
+                        />
+                      );
+                    });
+                  })()}
+                </svg>
+              </div>
+              <div className="w-full space-y-3">
+                {incomeCategoryStats.map((category, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div
+                      className="w-4 h-4 rounded-sm flex-shrink-0"
+                      style={{ backgroundColor: category.color }}
+                    ></div>
+                    <span className="text-gray-600 text-sm">
+                      {category.name} ({category.value.toFixed(2)}%)
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
