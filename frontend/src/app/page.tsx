@@ -14,9 +14,58 @@ type Transaction = {
   category: string;
 };
 
+const COLORS = [
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#AF19FF",
+  "#FF1943",
+];
+
+const getArcPath = (
+  cx: number,
+  cy: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number
+) => {
+  const start = {
+    x: cx + radius * Math.cos(((startAngle - 90) * Math.PI) / 180),
+    y: cy + radius * Math.sin(((startAngle - 90) * Math.PI) / 180),
+  };
+  const end = {
+    x: cx + radius * Math.cos(((endAngle - 90) * Math.PI) / 180),
+    y: cy + radius * Math.sin(((endAngle - 90) * Math.PI) / 180),
+  };
+
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+  const d = [
+    "M",
+    cx,
+    cy,
+    "L",
+    start.x,
+    start.y,
+    "A",
+    radius,
+    radius,
+    0,
+    largeArcFlag,
+    1,
+    end.x,
+    end.y,
+    "Z",
+  ].join(" ");
+
+  return d;
+};
+
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const fetchTransactions = async () => {
     setIsLoading(true);
@@ -33,6 +82,16 @@ export default function App() {
   useEffect(() => {
     fetchTransactions();
   }, []);
+
+  const availableYears = useMemo(() => {
+    if (transactions.length === 0) {
+      return [new Date().getFullYear()];
+    }
+    const years = new Set(
+      transactions.map((t) => new Date(t.date).getFullYear())
+    );
+    return Array.from(years).sort((a, b) => b - a);
+  }, [transactions]);
 
   const overviewStats = useMemo(() => {
     const income = transactions
@@ -60,7 +119,7 @@ export default function App() {
   }, [transactions]);
 
   const monthlyStats = useMemo(() => {
-    const labels = [
+    const allMonthLabels = [
       "Jan",
       "Feb",
       "Mar",
@@ -74,31 +133,27 @@ export default function App() {
       "Nov",
       "Dec",
     ];
-    const currentMonth = new Date().getMonth();
-    const lastSixMonthsLabels = Array.from({ length: 6 }, (_, i) => {
-      const monthIndex = (currentMonth - i + 12) % 12;
-      return labels[monthIndex];
-    }).reverse();
 
     const expensesByMonth = transactions
-      .filter((t) => t.amount < 0)
+      .filter((t) => {
+        const transactionDate = new Date(t.date);
+        return t.amount < 0 && transactionDate.getFullYear() === selectedYear;
+      })
       .reduce((acc, t) => {
-        const monthName = labels[new Date(t.date).getMonth()];
-        if (lastSixMonthsLabels.includes(monthName)) {
-          acc[monthName] = (acc[monthName] || 0) + Math.abs(t.amount);
-        }
+        const monthName = allMonthLabels[new Date(t.date).getMonth()];
+        acc[monthName] = (acc[monthName] || 0) + Math.abs(t.amount);
         return acc;
       }, {} as Record<string, number>);
 
     const maxExpense = Math.max(...Object.values(expensesByMonth), 1);
 
-    const values = lastSixMonthsLabels.map((label) => ({
+    const values = allMonthLabels.map((label) => ({
       label,
       height: ((expensesByMonth[label] || 0) / maxExpense) * 100,
     }));
 
-    return { labels: lastSixMonthsLabels, values };
-  }, [transactions]);
+    return { labels: allMonthLabels, values };
+  }, [transactions, selectedYear]);
 
   const categoryStats = useMemo(() => {
     const expenses = transactions.filter((t) => t.amount < 0);
@@ -113,10 +168,19 @@ export default function App() {
       return acc;
     }, {} as Record<string, number>);
 
-    return Object.entries(expensesByCategory).map(([name, amount]) => ({
-      name,
-      width: (amount / totalExpenses) * 100,
-    }));
+    return Object.entries(expensesByCategory)
+      .map(([name, amount], index) => ({
+        name,
+        value: (amount / totalExpenses) * 100,
+        color: COLORS[index % COLORS.length],
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, [transactions]);
+
+  const recentTransactions = useMemo(() => {
+    return [...transactions]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 10);
   }, [transactions]);
 
   return (
@@ -132,7 +196,7 @@ export default function App() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {overviewStats.map((item, index) => (
-            <div key={index} className="bg-white p-6 rounded-xl shadow-sm">
+            <div key={index} className="p-6 rounded-xl shadow-sm bg-[#e5e6e7]">
               <p className="text-sm text-gray-500">{item.title}</p>
               <p className="text-3xl font-semibold mt-1">
                 ₹{item.amount.toFixed(2)}
@@ -142,54 +206,98 @@ export default function App() {
         </div>
 
         <div className="mb-12">
-          <h2 className="text-xl font-bold mb-4">Monthly Expenses</h2>
-          <div className="bg-white p-6 rounded-xl shadow-sm">
-            <div className="flex justify-between items-end h-40 border-b border-gray-200 pb-4">
-              {monthlyStats.values.map((value, index) => (
-                <div
-                  key={index}
-                  className="w-1/6 px-2 flex justify-center items-end h-full"
-                >
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Monthly Expenses</h2>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="bg-white p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+            >
+              {availableYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-sm overflow-x-auto">
+            <div className="min-w-[600px]">
+              <div className="flex justify-between items-end h-40 border-b border-gray-200 pb-4">
+                {monthlyStats.values.map((value, index) => (
                   <div
-                    className="bg-gray-200 rounded-t-md w-full"
-                    style={{ height: `${value.height}%` }}
-                  ></div>
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between text-center text-sm text-gray-500 mt-2">
-              {monthlyStats.labels.map((label) => (
-                <div key={label} className="w-1/6 px-2">
-                  {label}
-                </div>
-              ))}
+                    key={index}
+                    className="flex-1 px-2 flex justify-center items-end h-full"
+                  >
+                    <div
+                      className="bg-gray-200 rounded-t-md w-full"
+                      style={{ height: `${value.height}%` }}
+                    ></div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between text-center text-sm text-gray-500 mt-2">
+                {monthlyStats.labels.map((label) => (
+                  <div key={label} className="flex-1 px-2">
+                    {label}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
         <div className="mb-12">
           <h2 className="text-xl font-bold mb-4">Category Breakdown</h2>
-          <div className="bg-white p-6 rounded-xl shadow-sm space-y-5">
-            {categoryStats.map((category) => (
-              <div key={category.name} className="flex items-center gap-4">
-                <span className="w-32 text-gray-600 text-sm flex-shrink-0">
-                  {category.name}
-                </span>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
+          <div className="bg-white p-6 rounded-xl shadow-sm flex flex-col sm:flex-row items-center gap-8">
+            <div className="w-48 h-48 flex-shrink-0">
+              <svg viewBox="0 0 100 100">
+                {(() => {
+                  let cumulativePercent = 0;
+                  return categoryStats.map((category, index) => {
+                    if (category.value === 0) return null;
+                    const startAngle = (cumulativePercent / 100) * 360;
+                    const endAngle =
+                      ((cumulativePercent + category.value) / 100) * 360;
+                    cumulativePercent += category.value;
+                    return (
+                      <path
+                        key={index}
+                        d={getArcPath(50, 50, 50, startAngle, endAngle)}
+                        fill={category.color}
+                      />
+                    );
+                  });
+                })()}
+              </svg>
+            </div>
+            <div className="w-full space-y-3">
+              {categoryStats.map((category, index) => (
+                <div key={index} className="flex items-center gap-3">
                   <div
-                    className="bg-gray-400 h-2.5 rounded-full"
-                    style={{ width: `${category.width}%` }}
+                    className="w-4 h-4 rounded-sm flex-shrink-0"
+                    style={{ backgroundColor: category.color }}
                   ></div>
+                  <span className="text-gray-600 text-sm">
+                    {category.name} ({category.value.toFixed(2)}%)
+                  </span>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
         <div>
-          <h2 className="text-xl font-bold mb-4">Recent Transactions</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold mb-4">Recent Transactions</h2>
+            <a
+              href="/transactions"
+              className="text-blue-600 hover:text-blue-800 font-semibold rounded-md px-3 py-1.5 bg-blue-100 hover:bg-blue-200 transition-colors"
+            >
+              View All
+            </a>
+          </div>
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="w-full shadow-lg rounded-2xl overflow-y-auto max-h-[70vh]">
+            <div className="w-full shadow-lg rounded-2xl">
               <table className="w-full text-left">
                 <thead>
                   <tr className="text-lg bg-gray-200 sticky top-0 z-10">
@@ -219,7 +327,7 @@ export default function App() {
                       </td>
                     </tr>
                   ) : (
-                    transactions.map((transaction) => (
+                    recentTransactions.map((transaction) => (
                       <tr key={transaction._id}>
                         <td className="p-2 text-center">
                           {new Date(transaction.date).toLocaleDateString()}
