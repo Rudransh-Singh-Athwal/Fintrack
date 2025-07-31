@@ -7,7 +7,7 @@ export default function Navbar() {
   const navLinks = [
     { href: "/", label: "Dashboard" },
     { href: "/transactions", label: "Transactions" },
-    { href: "/budgets", label: "Budgets" },
+    // { href: "/budgets", label: "Budgets" },
     // { href: "/reports", label: "Reports" },
   ];
 
