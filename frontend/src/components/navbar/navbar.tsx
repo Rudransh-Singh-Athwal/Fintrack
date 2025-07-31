@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 
-/* eslint-disable @next/next/no-html-link-for-pages */
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
