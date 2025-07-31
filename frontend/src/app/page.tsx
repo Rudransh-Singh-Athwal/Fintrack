@@ -315,7 +315,7 @@ export default function App() {
             </div>
           </div>
           <div>
-            <h2 className="text-xl font-bold mb-4">Income Breakdown</h2>
+            <h2 className="text-xl font-bold mb-4 mt-4">Income Breakdown</h2>
             <div className="bg-white p-6 rounded-xl shadow-sm flex flex-col sm:flex-row items-center gap-8 h-full">
               <div className="w-48 h-48 flex-shrink-0">
                 <svg viewBox="0 0 100 100">
@@ -356,7 +356,7 @@ export default function App() {
         </div>
 
         <div>
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-4 mt-[100px]">
             <h2 className="text-xl font-bold mb-4">Recent Transactions</h2>
             <a
               href="/transactions"
