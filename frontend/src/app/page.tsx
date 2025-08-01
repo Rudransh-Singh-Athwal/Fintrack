@@ -410,11 +410,11 @@ export default function App() {
                         <td className="p-2 text-center text-nowrap">
                           {transaction.amount > 0 ? (
                             <span className="text-green-500">
-                              ₹{transaction.amount.toFixed(2)}
+                              +₹{transaction.amount.toFixed(2)}
                             </span>
                           ) : (
                             <span className="text-red-500">
-                              ₹{Math.abs(transaction.amount).toFixed(2)}
+                              -₹{Math.abs(transaction.amount).toFixed(2)}
                             </span>
                           )}
                         </td>

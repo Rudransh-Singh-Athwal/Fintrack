@@ -265,7 +265,7 @@ export default function TransactionsPage() {
                       >
                         <div className="flex gap-2 justify-end lg:justify-center">
                           <button
-                            className="bg-green-500 text-white rounded-lg px-3 py-1 disabled:opacity-50"
+                            className="bg-green-500 text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
                             onClick={() => {
                               setIsSaving(true);
                               handleAddTransaction();
@@ -275,7 +275,7 @@ export default function TransactionsPage() {
                             {isSaving ? "Saving..." : "Save"}
                           </button>
                           <button
-                            className="bg-[#888] text-white rounded-lg px-3 py-1"
+                            className="bg-[#888] text-white rounded-lg px-3 py-1 hover:cursor-pointer"
                             onClick={() => {
                               setIsAddingNew(false);
                               setForm(initialForm);
@@ -389,7 +389,7 @@ export default function TransactionsPage() {
                               <div className="flex gap-2 justify-end lg:justify-center">
                                 <button
                                   disabled={isSaving}
-                                  className="bg-green-500 text-white rounded-lg px-3 py-1 disabled:opacity-50"
+                                  className="bg-green-500 text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
                                   onClick={() => {
                                     setIsSaving(true);
                                     handleEditTransaction(tx._id);
@@ -399,7 +399,7 @@ export default function TransactionsPage() {
                                 </button>
                                 <button
                                   disabled={isSaving}
-                                  className="bg-[#888] text-white rounded-lg px-3 py-1 disabled:opacity-50"
+                                  className="bg-[#888] text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
                                   onClick={() => {
                                     setIsEditing(false);
                                     setEditId(null);
@@ -428,19 +428,21 @@ export default function TransactionsPage() {
                               data-label="Category"
                               className="block p-3 text-right lg:text-center lg:p-2 lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
                             >
-                              {tx.category}
+                              <div className="lg:rounded-4xl lg:px-2 lg:py-1 lg:bg-[#e6e8e9] text-gray-700 lg:p-1  lg:w-full">
+                                {tx.category}
+                              </div>
                             </td>
                             <td
                               data-label="Amount"
                               className="block p-3 text-right lg:text-center lg:p-2 lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none text-nowrap"
                             >
                               {tx.amount > 0 ? (
-                                <span className="text-green-500 font-semibold">
-                                  ₹{tx.amount.toFixed(2)}
+                                <span className="text-green-500">
+                                  +₹{tx.amount.toFixed(2)}
                                 </span>
                               ) : (
-                                <span className="text-red-500 font-semibold">
-                                  ₹{Math.abs(tx.amount).toFixed(2)}
+                                <span className="text-red-500">
+                                  -₹{Math.abs(tx.amount).toFixed(2)}
                                 </span>
                               )}
                             </td>
@@ -453,7 +455,7 @@ export default function TransactionsPage() {
                                   disabled={
                                     isDeleting || isAddingNew || isEditing
                                   }
-                                  className="bg-[#007bff] text-white rounded-lg px-3 py-1 disabled:opacity-50"
+                                  className="bg-[#007bff] text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
                                   onClick={() => {
                                     setIsEditing(true);
                                     setEditId(tx._id);
@@ -471,7 +473,7 @@ export default function TransactionsPage() {
                                   Edit
                                 </button>
                                 <button
-                                  className="bg-[#dc3545] text-white rounded-lg px-3 py-1 disabled:opacity-50"
+                                  className="bg-[#dc3545] text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
                                   disabled={
                                     isDeleting || isAddingNew || isEditing
                                   }
