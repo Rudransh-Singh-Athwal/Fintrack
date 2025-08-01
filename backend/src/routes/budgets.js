@@ -25,7 +25,16 @@ router.post("/", async (req, res, next) => {
     });
   }
 
+  const { category, month, year } = req.body;
+
   try {
+    const existingBudget = await Budget.findOne({ category, month, year });
+    if (existingBudget) {
+      return res.status(409).json({
+        message: "A budget for this category, month, and year already exists.",
+      });
+    }
+
     const budget = new Budget(req.body);
     const saved = await budget.save();
     res.status(201).json(saved);
@@ -82,7 +91,7 @@ router.delete("/:id", async (req, res, next) => {
     }
     res.status(200).json({
       status: 200,
-      message: `Budget for ${budget.month}, ${budget.year} worth INR ${budget.amount} deleted successfully`,
+      message: `Budget for 0${budget.month}-${budget.year} worth INR ${budget.amount} deleted successfully`,
     });
   } catch (err) {
     next({
