@@ -1,23 +1,23 @@
 const express = require("express");
 const router = express.Router();
-const Transaction = require("../models/transaction");
-const { transactionValidator } = require("../validators/transaction");
+const Budget = require("../models/budgets");
+const { budgetValidator } = require("../validators/budget");
 
 router.get("/", async (req, res) => {
   try {
-    const transactions = await Transaction.find().sort({ date: -1 });
-    res.status(200).json(transactions);
+    const budgets = await Budget.find().sort({ year: -1, month: -1 });
+    res.status(200).json(budgets);
   } catch (err) {
     next({
       status: 500,
-      message: "Failed to fetch transactions",
+      message: "Failed to fetch budgets",
       error: err.message,
     });
   }
 });
 
 router.post("/", async (req, res, next) => {
-  const { error } = transactionValidator.validate(req.body);
+  const { error } = budgetValidator.validate(req.body);
   if (error) {
     return res.status(400).json({
       status: 400,
@@ -26,47 +26,46 @@ router.post("/", async (req, res, next) => {
   }
 
   try {
-    const transaction = new Transaction(req.body);
-    const saved = await transaction.save();
+    const budget = new Budget(req.body);
+    const saved = await budget.save();
     res.status(201).json(saved);
   } catch (err) {
     next({
       status: 500,
-      message: "Failed to create transaction",
+      message: "Failed to create budget",
       error: err.message,
     });
   }
 });
 
 router.put("/:id", async (req, res, next) => {
-  const { error } = transactionValidator.validate(req.body);
+  const { error } = budgetValidator.validate(req.body);
   if (error) {
     return res.status(400).json({
       status: 400,
       message: error.details[0].message,
     });
   }
+
   try {
-    const updated = await Transaction.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const updated = await Budget.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
     if (!updated) {
       return res.status(404).json({
         status: 404,
-        message: "Transaction not found",
+        message: "Budget not found",
       });
     }
     res.status(200).json({
       status: 200,
-      message: `Transaction of ${updated.amount} for ${updated.description} updated successfully`,
-      transaction: updated,
+      message: `Budget for ${updated.month}, ${updated.year} updated to ${updated.amount} successfully`,
+      budget: updated,
     });
   } catch (err) {
     next({
       status: 500,
-      message: "Failed to update transaction",
+      message: "Failed to update budget",
       error: err.message,
     });
   }
@@ -74,21 +73,21 @@ router.put("/:id", async (req, res, next) => {
 
 router.delete("/:id", async (req, res, next) => {
   try {
-    const transaction = await Transaction.findByIdAndDelete(req.params.id);
-    if (!transaction) {
+    const budget = await Budget.findByIdAndDelete(req.params.id);
+    if (!budget) {
       return res.status(404).json({
         status: 404,
-        message: "Transaction not found",
+        message: "Budget not found",
       });
     }
     res.status(200).json({
       status: 200,
-      message: `${transaction.description} worth INR ${transaction.amount} deleted successfully`,
+      message: `Budget for ${budget.month}, ${budget.year} worth INR ${budget.amount} deleted successfully`,
     });
   } catch (err) {
     next({
       status: 500,
-      message: "Failed to delete transaction",
+      message: "Failed to delete budget",
       error: err.message,
     });
   }
