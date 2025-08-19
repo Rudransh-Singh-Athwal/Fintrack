@@ -20,13 +20,6 @@ A simple, responsive web application to track personal finances and visualize sp
   - Category breakdown
   - Most recent transactions
 
-### Budgeting
-- Set monthly budgets per category
-- Budget vs. actual comparison chart
-- Simple spending insights
-
-> **Note:** Authentication and user accounts are intentionally **not implemented**.
-
 ---
 
 ## 🛠️ Tech Stack
