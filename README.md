@@ -29,7 +29,6 @@ A simple, responsive web application to track personal finances and visualize sp
 - **shadcn/ui** – Accessible, unstyled component primitives (built on Radix UI + Tailwind CSS)
 - **Recharts** – Data visualization library (bar and pie charts)
 - **MongoDB** – Transaction data storage
-- **Zod + React Hook Form** – Form validation and handling
 - **Tailwind CSS** – Utility-first styling
 ---
 ## 🚀 Getting Started
