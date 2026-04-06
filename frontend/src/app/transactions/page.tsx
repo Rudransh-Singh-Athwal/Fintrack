@@ -2,6 +2,7 @@
 import Navbar from "@/src/components/navbar/navbar";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import DataGate from "@/src/components/loading/data-gate";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -34,6 +35,8 @@ export default function TransactionsPage() {
     type: "Debit",
   };
   const [isLoading, setIsLoading] = useState(true);
+  const [hasConnectionError, setHasConnectionError] = useState(false);
+  const [allowWithoutData, setAllowWithoutData] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -43,11 +46,14 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const fetchTransactions = async () => {
+    setIsLoading(true);
+    setHasConnectionError(false);
     try {
       const response = await axios.get(`${API}/api/transactions`);
-      setTransactions(response.data);
+      setTransactions(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error("Error fetching transactions:", err);
+      setHasConnectionError(true);
     } finally {
       setIsLoading(false);
     }
@@ -66,8 +72,8 @@ export default function TransactionsPage() {
       if (!form.description) missingFields.push("Description");
       alert(
         `Please fill in the following fields correctly: ${missingFields.join(
-          ", "
-        )}`
+          ", ",
+        )}`,
       );
       return;
     }
@@ -138,374 +144,394 @@ export default function TransactionsPage() {
   };
 
   return (
-    <div className="bg-white w-full min-h-screen">
-      <Navbar />
-      <div className="flex flex-col items-center mt-10 p-4 lg:p-0">
-        <div className="w-full lg:w-[80%] flex flex-col items-center">
-          <div className="flex flex-col w-full mb-6 lg:flex-row lg:justify-between lg:text-nowrap">
-            <h1 className="text-3xl font-bold tracking-tight mb-6 text-black">
-              Transactions
-            </h1>
-            <button
-              className="bg-[#28a745] hover:cursor-pointer text-white text-lg px-4 py-2 h-fit rounded-lg self-end lg:self-center disabled:opacity-50"
-              onClick={() => {
-                setIsAddingNew(true);
-                setForm(initialForm);
-              }}
-              disabled={isAddingNew || isEditing}
-            >
-              Add transaction
-            </button>
-          </div>
+    <DataGate
+      appName="Fintrack"
+      isLoading={isLoading && !allowWithoutData}
+      hasError={hasConnectionError && !allowWithoutData}
+      onRetry={() => {
+        setAllowWithoutData(false);
+        fetchTransactions();
+      }}
+      onContinueWithoutData={() => {
+        setAllowWithoutData(true);
+        setHasConnectionError(false);
+      }}
+    >
+      <div className="w-full min-h-screen bg-[var(--background)] text-[var(--foreground)] transition-colors duration-200">
+        <Navbar />
+        <div className="flex flex-col items-center mt-10 p-4 lg:p-0">
+          <div className="w-full lg:w-[80%] flex flex-col items-center">
+            <div className="flex flex-col w-full mb-6 lg:flex-row lg:justify-between lg:text-nowrap">
+              <h1 className="text-3xl font-bold tracking-tight mb-6">
+                Transactions
+              </h1>
+              <button
+                className="bg-[#28a745] hover:cursor-pointer text-white text-lg px-4 py-2 h-fit rounded-lg self-end lg:self-center disabled:opacity-50"
+                onClick={() => {
+                  setIsAddingNew(true);
+                  setForm(initialForm);
+                }}
+                disabled={isAddingNew || isEditing}
+              >
+                Add transaction
+              </button>
+            </div>
 
-          <div className="w-full shadow-lg rounded-2xl overflow-hidden">
-            <div className="overflow-y-auto max-h-[70vh]">
-              <table className="w-full text-left">
-                <thead className="hidden lg:table-header-group">
-                  <tr className="text-lg bg-gray-200 sticky top-0 z-10">
-                    <th className="p-2 text-center text-black font-light text-xl">
-                      Date
-                    </th>
-                    <th className="p-2 text-center text-black font-light text-xl">
-                      Description
-                    </th>
-                    <th className="p-2 text-center text-black font-light text-xl">
-                      Category
-                    </th>
-                    <th className="p-2 text-center text-black font-light text-xl">
-                      Amount
-                    </th>
-                    <th className="p-2 text-center text-black font-light text-xl">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="text-base lg:text-lg text-[#747474]">
-                  {isAddingNew && (
-                    <tr className="block p-4 border rounded-lg bg-blue-50 mb-4 lg:table-row lg:border-0 lg:p-0 lg:mb-0">
-                      <td
-                        data-label="Date"
-                        className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
-                      >
-                        <input
-                          type="date"
-                          value={form.date}
-                          onChange={(e) =>
-                            setForm({ ...form, date: e.target.value })
-                          }
-                          className="border rounded p-1 w-1/2 lg:w-full"
-                        />
-                      </td>
-                      <td
-                        data-label="Description"
-                        className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
-                      >
-                        <input
-                          type="text"
-                          value={form.description}
-                          onChange={(e) =>
-                            setForm({ ...form, description: e.target.value })
-                          }
-                          className="border rounded p-1 w-1/2 lg:w-full"
-                          placeholder="Description"
-                        />
-                      </td>
-                      <td
-                        data-label="Category"
-                        className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
-                      >
-                        <select
-                          value={form.category}
-                          onChange={(e) =>
-                            setForm({ ...form, category: e.target.value })
-                          }
-                          className="border rounded p-1.5 w-1/2 lg:w-full"
+            <div className="w-full shadow-lg rounded-2xl overflow-hidden">
+              <div className="overflow-y-auto max-h-[70vh]">
+                <table className="w-full text-left">
+                  <thead className="hidden lg:table-header-group">
+                    <tr className="text-lg bg-[var(--surface-muted)] sticky top-0 z-10">
+                      <th className="p-2 text-center font-light text-xl">
+                        Date
+                      </th>
+                      <th className="p-2 text-center font-light text-xl">
+                        Description
+                      </th>
+                      <th className="p-2 text-center font-light text-xl">
+                        Category
+                      </th>
+                      <th className="p-2 text-center font-light text-xl">
+                        Amount
+                      </th>
+                      <th className="p-2 text-center font-light text-xl">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-base lg:text-lg text-[#747474]">
+                    {isAddingNew && (
+                      <tr className="block p-4 border rounded-lg bg-blue-50 mb-4 lg:table-row lg:border-0 lg:p-0 lg:mb-0">
+                        <td
+                          data-label="Date"
+                          className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
                         >
-                          {spendingCategories.map((cat) => (
-                            <option key={cat} value={cat}>
-                              {cat}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td
-                        data-label="Amount"
-                        className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
-                      >
-                        <div className="flex flex-row gap-2 justify-end lg:justify-center">
-                          <select
-                            value={form.type}
-                            onChange={(e) =>
-                              setForm({ ...form, type: e.target.value })
-                            }
-                            className="border rounded p-1.5"
-                          >
-                            <option value="Debit">Debit</option>
-                            <option value="Credit">Credit</option>
-                          </select>
                           <input
-                            type="number"
-                            value={form.amount || ""}
+                            type="date"
+                            value={form.date}
                             onChange={(e) =>
-                              setForm({
-                                ...form,
-                                amount: Math.abs(
-                                  parseFloat(e.target.value) || 0
-                                ),
-                              })
+                              setForm({ ...form, date: e.target.value })
                             }
-                            className="border rounded p-1 w-full"
-                            placeholder="Amount"
+                            title="Transaction date"
+                            className="border rounded p-1 w-1/2 lg:w-full"
                           />
-                        </div>
-                      </td>
-                      <td
-                        data-label="Actions"
-                        className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
-                      >
-                        <div className="flex gap-2 justify-end lg:justify-center">
-                          <button
-                            className="bg-green-500 text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
-                            onClick={() => {
-                              setIsSaving(true);
-                              handleAddTransaction();
-                            }}
-                            disabled={isSaving}
+                        </td>
+                        <td
+                          data-label="Description"
+                          className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                        >
+                          <input
+                            type="text"
+                            value={form.description}
+                            onChange={(e) =>
+                              setForm({ ...form, description: e.target.value })
+                            }
+                            title="Transaction description"
+                            className="border rounded p-1 w-1/2 lg:w-full"
+                            placeholder="Description"
+                          />
+                        </td>
+                        <td
+                          data-label="Category"
+                          className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                        >
+                          <select
+                            value={form.category}
+                            onChange={(e) =>
+                              setForm({ ...form, category: e.target.value })
+                            }
+                            title="Transaction category"
+                            className="border rounded p-1.5 w-1/2 lg:w-full"
                           >
-                            {isSaving ? "Saving..." : "Save"}
-                          </button>
-                          <button
-                            className="bg-[#888] text-white rounded-lg px-3 py-1 hover:cursor-pointer"
-                            onClick={() => {
-                              setIsAddingNew(false);
-                              setForm(initialForm);
-                            }}
-                            disabled={isSaving}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                  {isLoading ? (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="p-4 text-2xl text-center text-gray-500"
-                      >
-                        Loading transactions...
-                      </td>
-                    </tr>
-                  ) : transactions.length > 0 ? (
-                    transactions.map((tx) => (
-                      <tr
-                        key={tx._id}
-                        className="block border shadow-md rounded-lg mb-4 lg:table-row lg:border-0 lg:shadow-none lg:mb-0 lg:border-b hover:bg-gray-50 transition-colors duration-200"
-                      >
-                        {isEditing && editId === tx._id ? (
-                          <>
-                            <td
-                              data-label="Date"
-                              className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                            {spendingCategories.map((cat) => (
+                              <option key={cat} value={cat}>
+                                {cat}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td
+                          data-label="Amount"
+                          className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                        >
+                          <div className="flex flex-row gap-2 justify-end lg:justify-center">
+                            <select
+                              value={form.type}
+                              onChange={(e) =>
+                                setForm({ ...form, type: e.target.value })
+                              }
+                              title="Transaction type"
+                              className="border rounded p-1.5"
                             >
-                              <input
-                                type="date"
-                                value={form.date}
-                                onChange={(e) =>
-                                  setForm({ ...form, date: e.target.value })
-                                }
-                                className="border rounded p-1 w-1/2 lg:w-full"
-                              />
-                            </td>
-                            <td
-                              data-label="Description"
-                              className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                              <option value="Debit">Debit</option>
+                              <option value="Credit">Credit</option>
+                            </select>
+                            <input
+                              type="number"
+                              value={form.amount || ""}
+                              onChange={(e) =>
+                                setForm({
+                                  ...form,
+                                  amount: Math.abs(
+                                    parseFloat(e.target.value) || 0,
+                                  ),
+                                })
+                              }
+                              title="Transaction amount"
+                              className="border rounded p-1 w-full"
+                              placeholder="Amount"
+                            />
+                          </div>
+                        </td>
+                        <td
+                          data-label="Actions"
+                          className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                        >
+                          <div className="flex gap-2 justify-end lg:justify-center">
+                            <button
+                              className="bg-green-500 text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
+                              onClick={() => {
+                                setIsSaving(true);
+                                handleAddTransaction();
+                              }}
+                              disabled={isSaving}
                             >
-                              <input
-                                type="text"
-                                value={form.description}
-                                onChange={(e) =>
-                                  setForm({
-                                    ...form,
-                                    description: e.target.value,
-                                  })
-                                }
-                                className="border rounded p-1 w-1/2 lg:w-full"
-                              />
-                            </td>
-                            <td
-                              data-label="Category"
-                              className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                              {isSaving ? "Saving..." : "Save"}
+                            </button>
+                            <button
+                              className="bg-[#888] text-white rounded-lg px-3 py-1 hover:cursor-pointer"
+                              onClick={() => {
+                                setIsAddingNew(false);
+                                setForm(initialForm);
+                              }}
+                              disabled={isSaving}
                             >
-                              <select
-                                value={form.category}
-                                onChange={(e) =>
-                                  setForm({ ...form, category: e.target.value })
-                                }
-                                className="border rounded p-1.5 w-1/2 lg:w-full"
+                              Cancel
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    {transactions.length > 0 ? (
+                      transactions.map((tx) => (
+                        <tr
+                          key={tx._id}
+                          className="block border shadow-md rounded-lg mb-4 lg:table-row lg:border-0 lg:shadow-none lg:mb-0 lg:border-b hover:bg-gray-50 transition-colors duration-200"
+                        >
+                          {isEditing && editId === tx._id ? (
+                            <>
+                              <td
+                                data-label="Date"
+                                className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
                               >
-                                {spendingCategories.map((cat) => (
-                                  <option key={cat} value={cat}>
-                                    {cat}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-                            <td
-                              data-label="Amount"
-                              className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
-                            >
-                              <div className="flex flex-row gap-2 justify-end lg:justify-center">
-                                <select
-                                  value={form.type}
-                                  onChange={(e) =>
-                                    setForm({ ...form, type: e.target.value })
-                                  }
-                                  className="border rounded p-1.5"
-                                >
-                                  <option value="Debit">Debit</option>
-                                  <option value="Credit">Credit</option>
-                                </select>
                                 <input
-                                  type="number"
-                                  value={form.amount}
+                                  type="date"
+                                  value={form.date}
+                                  onChange={(e) =>
+                                    setForm({ ...form, date: e.target.value })
+                                  }
+                                  title="Transaction date"
+                                  className="border rounded p-1 w-1/2 lg:w-full"
+                                />
+                              </td>
+                              <td
+                                data-label="Description"
+                                className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                              >
+                                <input
+                                  type="text"
+                                  value={form.description}
                                   onChange={(e) =>
                                     setForm({
                                       ...form,
-                                      amount: Math.abs(
-                                        parseFloat(e.target.value) || 0
-                                      ),
+                                      description: e.target.value,
                                     })
                                   }
-                                  className="border rounded p-1 w-full"
+                                  title="Transaction description"
+                                  className="border rounded p-1 w-1/2 lg:w-full"
                                 />
-                              </div>
-                            </td>
-                            <td
-                              data-label="Actions"
-                              className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
-                            >
-                              <div className="flex gap-2 justify-end lg:justify-center">
-                                <button
-                                  disabled={isSaving}
-                                  className="bg-green-500 text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
-                                  onClick={() => {
-                                    setIsSaving(true);
-                                    handleEditTransaction(tx._id);
-                                  }}
-                                >
-                                  {isSaving ? "Saving..." : "Save"}
-                                </button>
-                                <button
-                                  disabled={isSaving}
-                                  className="bg-[#888] text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
-                                  onClick={() => {
-                                    setIsEditing(false);
-                                    setEditId(null);
-                                  }}
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td
-                              data-label="Date"
-                              className="block p-3 text-right lg:text-center lg:p-2 lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none text-nowrap"
-                            >
-                              {new Date(tx.date).toISOString().slice(0, 10)}
-                            </td>
-                            <td
-                              data-label="Description"
-                              className="block p-3 text-right lg:text-center lg:p-2 lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
-                            >
-                              {tx.description}
-                            </td>
-                            <td
-                              data-label="Category"
-                              className="block p-3 text-right lg:text-center lg:p-2 lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
-                            >
-                              <div className="lg:rounded-4xl lg:px-2 lg:py-1 lg:bg-[#e6e8e9] text-gray-700 lg:p-1  lg:w-full">
-                                {tx.category}
-                              </div>
-                            </td>
-                            <td
-                              data-label="Amount"
-                              className="block p-3 text-right lg:text-center lg:p-2 lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none text-nowrap"
-                            >
-                              {tx.amount > 0 ? (
-                                <span className="text-green-500">
-                                  +₹{tx.amount.toFixed(2)}
-                                </span>
-                              ) : (
-                                <span className="text-red-500">
-                                  -₹{Math.abs(tx.amount).toFixed(2)}
-                                </span>
-                              )}
-                            </td>
-                            <td
-                              data-label="Actions"
-                              className="block p-3 text-right lg:text-center lg:p-2 lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
-                            >
-                              <div className="flex gap-2 justify-end lg:justify-center">
-                                <button
-                                  disabled={
-                                    isDeleting || isAddingNew || isEditing
-                                  }
-                                  className="bg-[#007bff] text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
-                                  onClick={() => {
-                                    setIsEditing(true);
-                                    setEditId(tx._id);
+                              </td>
+                              <td
+                                data-label="Category"
+                                className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                              >
+                                <select
+                                  value={form.category}
+                                  onChange={(e) =>
                                     setForm({
-                                      date: new Date(tx.date)
-                                        .toISOString()
-                                        .slice(0, 10),
-                                      description: tx.description,
-                                      amount: Math.abs(tx.amount),
-                                      category: tx.category || "Miscellaneous",
-                                      type: tx.amount < 0 ? "Debit" : "Credit",
-                                    });
-                                  }}
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  className="bg-[#dc3545] text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
-                                  disabled={
-                                    isDeleting || isAddingNew || isEditing
+                                      ...form,
+                                      category: e.target.value,
+                                    })
                                   }
-                                  onClick={() => {
-                                    setIsDeleting(true);
-                                    handleDeleteTransaction(tx._id);
-                                  }}
+                                  title="Transaction category"
+                                  className="border rounded p-1.5 w-1/2 lg:w-full"
                                 >
-                                  Delete
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        )}
+                                  {spendingCategories.map((cat) => (
+                                    <option key={cat} value={cat}>
+                                      {cat}
+                                    </option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td
+                                data-label="Amount"
+                                className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                              >
+                                <div className="flex flex-row gap-2 justify-end lg:justify-center">
+                                  <select
+                                    value={form.type}
+                                    onChange={(e) =>
+                                      setForm({ ...form, type: e.target.value })
+                                    }
+                                    title="Transaction type"
+                                    className="border rounded p-1.5"
+                                  >
+                                    <option value="Debit">Debit</option>
+                                    <option value="Credit">Credit</option>
+                                  </select>
+                                  <input
+                                    type="number"
+                                    value={form.amount}
+                                    onChange={(e) =>
+                                      setForm({
+                                        ...form,
+                                        amount: Math.abs(
+                                          parseFloat(e.target.value) || 0,
+                                        ),
+                                      })
+                                    }
+                                    title="Transaction amount"
+                                    className="border rounded p-1 w-full"
+                                  />
+                                </div>
+                              </td>
+                              <td
+                                data-label="Actions"
+                                className="block p-2 text-right lg:text-center lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                              >
+                                <div className="flex gap-2 justify-end lg:justify-center">
+                                  <button
+                                    disabled={isSaving}
+                                    className="bg-green-500 text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
+                                    onClick={() => {
+                                      setIsSaving(true);
+                                      handleEditTransaction(tx._id);
+                                    }}
+                                  >
+                                    {isSaving ? "Saving..." : "Save"}
+                                  </button>
+                                  <button
+                                    disabled={isSaving}
+                                    className="bg-[#888] text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
+                                    onClick={() => {
+                                      setIsEditing(false);
+                                      setEditId(null);
+                                    }}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td
+                                data-label="Date"
+                                className="block p-3 text-right lg:text-center lg:p-2 lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none text-nowrap"
+                              >
+                                {new Date(tx.date).toISOString().slice(0, 10)}
+                              </td>
+                              <td
+                                data-label="Description"
+                                className="block p-3 text-right lg:text-center lg:p-2 lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                              >
+                                {tx.description}
+                              </td>
+                              <td
+                                data-label="Category"
+                                className="block p-3 text-right lg:text-center lg:p-2 lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                              >
+                                <div className="lg:rounded-4xl lg:px-2 lg:py-1 lg:bg-[#e6e8e9] text-gray-700 lg:p-1  lg:w-full">
+                                  {tx.category}
+                                </div>
+                              </td>
+                              <td
+                                data-label="Amount"
+                                className="block p-3 text-right lg:text-center lg:p-2 lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none text-nowrap"
+                              >
+                                {tx.amount > 0 ? (
+                                  <span className="text-green-500">
+                                    +₹{tx.amount.toFixed(2)}
+                                  </span>
+                                ) : (
+                                  <span className="text-red-500">
+                                    -₹{Math.abs(tx.amount).toFixed(2)}
+                                  </span>
+                                )}
+                              </td>
+                              <td
+                                data-label="Actions"
+                                className="block p-3 text-right lg:text-center lg:p-2 lg:table-cell before:content-[attr(data-label)] before:font-bold before:float-left lg:before:content-none"
+                              >
+                                <div className="flex gap-2 justify-end lg:justify-center">
+                                  <button
+                                    disabled={
+                                      isDeleting || isAddingNew || isEditing
+                                    }
+                                    className="bg-[#007bff] text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
+                                    onClick={() => {
+                                      setIsEditing(true);
+                                      setEditId(tx._id);
+                                      setForm({
+                                        date: new Date(tx.date)
+                                          .toISOString()
+                                          .slice(0, 10),
+                                        description: tx.description,
+                                        amount: Math.abs(tx.amount),
+                                        category:
+                                          tx.category || "Miscellaneous",
+                                        type:
+                                          tx.amount < 0 ? "Debit" : "Credit",
+                                      });
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    className="bg-[#dc3545] text-white rounded-lg px-3 py-1 disabled:opacity-50 hover:cursor-pointer"
+                                    disabled={
+                                      isDeleting || isAddingNew || isEditing
+                                    }
+                                    onClick={() => {
+                                      setIsDeleting(true);
+                                      handleDeleteTransaction(tx._id);
+                                    }}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="p-4 text-center text-gray-500 italic"
+                        >
+                          No transactions found.
+                        </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="p-4 text-center text-gray-500 italic"
-                      >
-                        No transactions found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </DataGate>
   );
 }
